@@ -1,0 +1,3 @@
+useDynLib(MixedGraphs)
+importFrom(Rcpp, evalCpp)
+exportPattern("^[[:alpha:]]+")

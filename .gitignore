@@ -1,0 +1,13 @@
+src-i386
+src-x64
+*.[oa]
+*.so
+*.bat
+*.zip
+*.gz
+*.rds
+/glmPR/src/symbols.rds
+glmPR.Rcheck
+test
+/glmPR/src/.Rhistory
+.Rhistory
