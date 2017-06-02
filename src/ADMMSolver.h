@@ -15,17 +15,16 @@ protected:
     arma::vec u;
 
 public:
+    ADMMSolver(){};
     ADMMSolver(const arma::mat &X, 
                const arma::vec &y, 
                const arma::vec &o,
                const arma::vec beta,
                const arma::vec z);
-    arma::vec getGradient(const arma::vec &z);
-    arma::mat getHessian();
-    virtual arma::vec solve(const arma::vec &z);
-    void updateBeta(const arma::vec &z);
+    arma::vec solve(const arma::vec &z);
+    virtual void updateBeta(const arma::vec &z) = 0;
     void updateU(const arma::vec &z);
-    ~ADMMSolver();
+    virtual ~ADMMSolver(){};
 };
 
 class ADMMLogistic : public ADMMSolver {
@@ -34,12 +33,11 @@ public:
                  const arma::vec &y, 
                  const arma::vec &o,
                  const arma::vec beta,
-                 const arma::vec z):ADMMSolver(X, y, o, beta, z) {};
+                 const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
     arma::vec getGradient(const arma::vec &z);
     arma::mat getHessian();
-    arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
-    ~ADMMLogistic();
+    ~ADMMLogistic(){};
     
 };
 
@@ -49,12 +47,12 @@ public:
                 const arma::vec &y, 
                 const arma::vec &o,
                 const arma::vec beta,
-                const arma::vec z):ADMMSolver(X, y, o, beta, z) {};
+                const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
     arma::vec getGradient(const arma::vec &z);
     arma::mat getHessian();
     arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
-    ~ADMMPoisson();
+    ~ADMMPoisson(){};
     
 };
 
@@ -64,10 +62,10 @@ public:
                  const arma::vec &y, 
                  const arma::vec &o,
                  const arma::vec beta,
-                 const arma::vec z):ADMMSolver(X, y, o, beta, z) {};
+                 const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
     arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
-    ~ADMMGaussian();
+    ~ADMMGaussian(){};
     
 };
 #endif

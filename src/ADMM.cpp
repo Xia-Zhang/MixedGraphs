@@ -101,3 +101,16 @@ void ADMM::clear() {
     sumUBeta.clear();
     y.clear();
 }
+
+void ADMM::reset() {
+
+}
+
+void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint32_t num) {
+    if (source.empty()) {
+        target = arma::vec(num, arma::fill::zeros);
+    }
+    else {
+        target = source;
+    }
+}

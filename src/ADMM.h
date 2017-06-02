@@ -44,6 +44,6 @@ public:
     void reset();
     void clear();
     arma::vec fit(const std::string method);
-    ~ADMM();
+    ~ADMM(){};
 };
 #endif
