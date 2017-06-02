@@ -7,14 +7,16 @@
 using namespace Rcpp;
 
 // test
-List test(const arma::mat& X, const arma::colvec& y);
-RcppExport SEXP MixedGraphs_test(SEXP XSEXP, SEXP ySEXP) {
+List test(const arma::mat& X, const arma::vec& y, const double lambda, const std::string method);
+RcppExport SEXP MixedGraphs_test(SEXP XSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< const arma::colvec& >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(test(X, y));
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type method(methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(test(X, y, lambda, method));
     return rcpp_result_gen;
 END_RCPP
 }

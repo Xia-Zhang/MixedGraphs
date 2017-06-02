@@ -20,7 +20,7 @@ public:
                const arma::vec &y, 
                const arma::vec &o,
                const arma::vec beta,
-               const arma::vec z);
+               const arma::vec u);
     arma::vec solve(const arma::vec &z);
     virtual void updateBeta(const arma::vec &z) = 0;
     void updateU(const arma::vec &z);

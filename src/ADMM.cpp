@@ -6,6 +6,7 @@ ADMM::ADMM( const arma::mat &X,
             const arma::vec &betaWS,
             const arma::vec &zWS,
             const arma::vec &uWS,
+            const arma::vec &w,
             const uint32_t KLB,
             const uint32_t maxIter,
             const uint32_t threadNum) {
@@ -16,17 +17,20 @@ ADMM::ADMM( const arma::mat &X,
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
     setVec(this->uWS, uWS, p);
+    setWeight(w);
     this->KLB = KLB;
     this->maxIter = maxIter;
     this->threadNum = threadNum;
+
+    sumUBeta = arma::mat(p, threadNum, arma::fill::zeros);
 }
 
 
 arma::vec ADMM::fit(const std::string method) {
     uint32_t k = 1;
     ADMMSolver *solver;
-    std::string lowerMethod;
-    std::transform(method.begin(), method.end(), lowerMethod.begin(), ::tolower);
+    std::string lowerMethod(method);
+    std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
     if (lowerMethod == "logistic") {
         solver = new ADMMLogistic(X, y, o, betaWS, uWS);
     }
@@ -38,14 +42,16 @@ arma::vec ADMM::fit(const std::string method) {
     }
 
     z = zWS;
+
     while (k <= maxIter) {
-        sumUBeta.row(0) = updateUBeta(solver);
+        sumUBeta.col(0) = updateUBeta(solver);
         updateZ();
         if (stopCriteria()) {
             break;
         }
         k++;
     }
+    Rcpp::Rcout << "The total iterations: " << k << std::endl;
     return z;
 }
 
@@ -56,7 +62,7 @@ arma::vec ADMM::updateUBeta(ADMMSolver *solver) {
 }
 
 void ADMM::updateZ() {
-    softThreashold(sum(sumUBeta).t() / sumUBeta.n_rows, this->z);
+    softThreashold(sum(sumUBeta, 1) / sumUBeta.n_cols, this->z);
 }
 
 void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
@@ -75,6 +81,10 @@ void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
 }
 
 bool ADMM::stopCriteria() {
+    if (preSupport.empty()) {
+        preSupport = arma::vec(z.n_elem, arma::fill::zeros);
+        supportIter = -1;
+    }
     bool remainSame = true;
     for (uint32_t i = 0; i < z.n_elem; i++) {
         if (remainSame) {
@@ -112,5 +122,27 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint32_t num
     }
     else {
         target = source;
+    }
+}
+
+void ADMM::setWeight(const double lambda) {
+    this->w = arma::vec(X.n_cols);
+    this->w.fill(lambda);
+    this->w[0] = 0;
+}
+
+void ADMM::setWeight(const arma::vec &weight) {
+    if (weight.empty()) {
+        this->w = arma::vec(X.n_cols, arma::fill::ones);
+        this->w[0] = 0;
+    }
+    else if (weight.n_elem == X.n_cols){
+        this->w = weight;
+    }
+    else if (weight.n_elem == X.n_cols - 1) {
+        this-> w = arma::vec(X.n_cols, arma::fill::zeros);
+        for (uint32_t i = 0; i < weight.n_elem; i++) {
+            this->w[i + 1] = weight[i];
+        }
     }
 }

@@ -18,13 +18,9 @@ using namespace Rcpp;
 
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
-List test(const arma::mat& X, const arma::colvec& y) {
-    Rcout << "Hello World!";
-
+List test(const arma::mat& X, const arma::vec& y, const double lambda = 0.5, const std::string method = "Gaussian") {
     ADMM testADMM(X, y);
-    arma::vec result = testADMM.fit("logistic");
-    for (unsigned int i = 0; i < result.n_elem; i++) {
-        Rcout << result[i] << " ";
-    }
+    testADMM.setWeight(lambda);
+    arma::vec result = testADMM.fit(method);
     return List::create(Named("Result") = result);
 }

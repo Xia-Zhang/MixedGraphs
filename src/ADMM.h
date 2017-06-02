@@ -38,9 +38,12 @@ public:
          const arma::vec &betaWS = arma::vec(),
          const arma::vec &zWS = arma::vec(),
          const arma::vec &uWS = arma::vec(),
-         const uint32_t KLB = 5,
+         const arma::vec &w = arma::vec(),
+         const uint32_t KLB = 1000,
          const uint32_t maxIter = 10e5,
          const uint32_t threadNum = 1);
+    void setWeight(const double lambda);
+    void setWeight(const arma::vec &weight);
     void reset();
     void clear();
     arma::vec fit(const std::string method);
