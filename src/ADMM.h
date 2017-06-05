@@ -39,8 +39,8 @@ public:
          const arma::vec &zWS = arma::vec(),
          const arma::vec &uWS = arma::vec(),
          const arma::vec &w = arma::vec(),
-         const uint32_t KLB = 1000,
-         const uint32_t maxIter = 10e5,
+         const uint32_t KLB = 10e4,
+         const uint32_t maxIter = 10e6,
          const uint32_t threadNum = 1);
     void setWeight(const double lambda);
     void setWeight(const arma::vec &weight);

@@ -29,7 +29,7 @@ arma::vec ADMMLogistic::getGradient(const arma::vec &z) {
     arma::vec gradient(p, arma::fill::zeros);
     for (uint32_t i = 0; i < n; i++) {
         denominator = 1 + exp( - (o[i] + arma::as_scalar(X.row(i) * beta)));
-        gradient += (-1) * X.row(i).t() / denominator + y(i) * X.row(i).t();
+        gradient += X.row(i).t() / denominator - y(i) * X.row(i).t();
     }
     gradient = gradient / n  + beta + z + u;
     return gradient;
@@ -65,7 +65,7 @@ arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
 
     for (uint32_t i = 0; i < n; i++) {
         factor = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-        gradient += y(i) * X.row(i).t() + X.row(i).t() * factor;
+        gradient += - y(i) * X.row(i).t() + X.row(i).t() * factor;
     }
     gradient = gradient / n + beta + z + u;
     return gradient;
