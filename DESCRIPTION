@@ -9,3 +9,4 @@ Description: An R package for mixed graphical models. The package allow for fitt
 License: GPL-2
 Imports: Rcpp (>= 0.12.9)
 LinkingTo: Rcpp, RcppArmadillo
+RoxygenNote: 6.0.1

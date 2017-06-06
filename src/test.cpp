@@ -18,7 +18,7 @@ using namespace Rcpp;
 
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
-List test(const arma::mat& X, const arma::vec& y, const double lambda = 0.5, const std::string method = "Gaussian") {
+List test(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     ADMM testADMM(X, y);
     testADMM.setWeight(lambda);
     arma::vec result = testADMM.fit(method);
