@@ -22,5 +22,8 @@ List test(const arma::mat& X, const arma::vec& y, const std::string method = "Ga
     ADMM testADMM(X, y);
     testADMM.setWeight(lambda);
     arma::vec result = testADMM.fit(method);
+    Rcpp::Rcout <<"haha" << std::endl;
+    //testADMM.setThreadNumber(4);
+    //result = testADMM.fit(method);
     return List::create(Named("Result") = result);
 }
