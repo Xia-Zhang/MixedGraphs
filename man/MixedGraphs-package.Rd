@@ -24,11 +24,14 @@ Maintainer: Xia Zhang <zhangxia9403@gmail.com>
 % ~~ Literature or other references for background information ~~
 }
 % ~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R documentation directory ~~
-\keyword{ package }
+% \keyword{ package }
 % \seealso{
 % ~~ Optional links to other man pages, e.g. ~~
 % ~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
 % }
 \examples{
-#~~ simple examples of the most important functions ~~
+    X <- matrix(rnorm(500), ncol = 10)
+    y <- rpois(50, 3)
+    glm(y ~ X, family = "poisson")
+    test(cbind(1, X), y, "poisson", 0.0)
 }
