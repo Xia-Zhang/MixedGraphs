@@ -31,7 +31,7 @@ arma::vec ADMMLogistic::getGradient(const arma::vec &z) {
         denominator = 1 + exp( - (o[i] + arma::as_scalar(X.row(i) * beta)));
         gradient += X.row(i).t() / denominator - y(i) * X.row(i).t();
     }
-    gradient = gradient / n  + beta + z + u;
+    gradient = gradient / n  + beta - z + u;
     return gradient;
 }
 
@@ -67,7 +67,7 @@ arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
         factor = exp(o[i] + arma::as_scalar(X.row(i) * beta));
         gradient += - y(i) * X.row(i).t() + X.row(i).t() * factor;
     }
-    gradient = gradient / n + beta + z + u;
+    gradient = gradient / n + beta - z + u;
     return gradient;
 }
 
@@ -94,5 +94,5 @@ void ADMMPoisson::updateBeta(const arma::vec &z) {
 void ADMMGaussian::updateBeta(const arma::vec &z) {
     uint32_t n = X.n_rows, p = X.n_cols;
     beta = (X.t() * X / n + arma::eye<arma::mat>(p, p)).i() * X.t() * (y - o) / n;
-    beta = beta - (X.t() * X / n + arma::eye<arma::mat>(p, p)).i() * (z + u);
+    beta = beta + (X.t() * X / n + arma::eye<arma::mat>(p, p)).i() * (z - u);
 }
