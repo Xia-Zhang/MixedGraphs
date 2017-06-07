@@ -3,7 +3,9 @@
 \alias{MixedGraphs}
 \docType{package}
 \title{
-\packageTitle{MixedGraphs}
+% \packageTitle{
+MixedGraphs
+% }
 }
 \description{
 A package about mixed graphical models.
