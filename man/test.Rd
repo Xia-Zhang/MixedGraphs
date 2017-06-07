@@ -2,8 +2,7 @@
 % Please edit documentation in R/test.R
 \name{test}
 \alias{test}
-\title{L1-penalized Poisson Regression
-You can see glmPR.default and glmPR.formula for more details}
+\title{Test function for ADMM Solver}
 \usage{
 test(X, y, method = "Gaussian", lambda = 0.5)
 }
@@ -19,8 +18,7 @@ test(X, y, method = "Gaussian", lambda = 0.5)
 \item{...}{other parameters}
 }
 \description{
-L1-penalized Poisson Regression
-You can see glmPR.default and glmPR.formula for more details
+Test function for ADMM Solver
 }
 \examples{
 X <- matrix(rnorm(500), ncol = 10)

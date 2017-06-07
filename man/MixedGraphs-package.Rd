@@ -6,13 +6,15 @@
 \packageTitle{MixedGraphs}
 }
 \description{
-\packageDescription{MixedGraphs}
+A package about mixed graphical models.
+% \packageDescription{MixedGraphs}
 }
 \details{
 
-The DESCRIPTION file:
-\packageDESCRIPTION{MixedGraphs}
-\packageIndices{MixedGraphs}
+A package about mixed graphical models.
+% The DESCRIPTION file:
+% \packageDESCRIPTION{MixedGraphs}
+% \packageIndices{MixedGraphs}
 % ~~ An overview of how to use the package, including the most important functions ~~
 }
 \author{
@@ -24,7 +26,7 @@ Maintainer: Xia Zhang <zhangxia9403@gmail.com>
 % % ~~ Literature or other references for background information ~~
 % }
 % ~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R documentation directory ~~
-% \keyword{ package }
+\keyword{ package }
 % \seealso{
 % ~~ Optional links to other man pages, e.g. ~~
 % ~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~

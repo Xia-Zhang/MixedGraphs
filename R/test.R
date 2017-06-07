@@ -1,5 +1,4 @@
-#' L1-penalized Poisson Regression
-#' You can see glmPR.default and glmPR.formula for more details
+#' Test function for ADMM Solver
 #'
 #' @param X the input matrix
 #' @param y the responce vector
