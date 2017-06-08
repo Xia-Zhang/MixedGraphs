@@ -6,14 +6,7 @@ NewtonSolver::NewtonSolver(const arma::mat &X,
                            double epsilon,
                            uint32_t maxIter,
                            double sigma) {
-    this->X = X;
-    this->y = y;
-    if (o.empty())
-        this->o = arma::vec(X.n_rows, arma::fill::zeros);
-    else this->o = o;
-    this->epsilon = epsilon;
-    this->maxIter = maxIter;
-    this->sigma = sigma;
+    setSolver(X, y, o, epsilon, maxIter, sigma);
 }
 
 void NewtonSolver::setSolver(const arma::mat &X,

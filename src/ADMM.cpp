@@ -1,7 +1,7 @@
 #include "ADMM.h"
 
-ADMM::ADMM( const arma::mat &X, 
-            const arma::vec &y, 
+ADMM::ADMM (const arma::mat &X,
+            const arma::vec &y,
             const arma::vec &o,
             const arma::vec &betaWS,
             const arma::vec &zWS,
@@ -10,6 +10,19 @@ ADMM::ADMM( const arma::mat &X,
             const uint32_t KLB,
             const uint32_t maxIter,
             const uint32_t threadNum) {
+    reset(X, y, o, betaWS, zWS, uWS, w, KLB, maxIter, threadNum);
+}
+
+void ADMM::reset(const arma::mat &X,
+                 const arma::vec &y,
+                 const arma::vec &o,
+                 const arma::vec &betaWS,
+                 const arma::vec &zWS,
+                 const arma::vec &uWS,
+                 const arma::vec &w,
+                 const uint32_t KLB,
+                 const uint32_t maxIter,
+                 const uint32_t threadNum) {
     this->X = X;
     this->y = y;
     uint32_t n = X.n_rows, p = X.n_cols;
@@ -23,15 +36,20 @@ ADMM::ADMM( const arma::mat &X,
     this->threadNum = threadNum;
 }
 
-template <typename T>
-void ADMM::initialSolver(std::vector<ADMMSolver *> &solvers) {
-    uint32_t n = X.n_rows;
-    double interval = n / static_cast<double>(threadNum);
-    for (uint32_t i = 0; i < threadNum; i++) {
-        uint32_t col0 = i * interval, col1 = (i + 1) * interval - 1;
-        arma::mat subX = X.rows(col0, col1);
-        solvers[i] = new T(X.rows(col0, col1), y.subvec(col0, col1), o, betaWS, uWS);
-    }
+void ADMM::clear() {
+    X.clear();
+    sumUBeta.clear();
+    y.clear();
+    o.clear();
+    betaWS.clear();
+    zWS.clear();
+    uWS.clear();
+    w.clear();
+    z.clear();
+    preSupport.clear();
+    KLB = 0;
+    maxIter = 0;
+    threadNum = 0;
 }
 
 arma::vec ADMM::fit(const std::string method) {
@@ -39,18 +57,17 @@ arma::vec ADMM::fit(const std::string method) {
     std::vector<ADMMSolver *> solvers(threadNum);
     std::string lowerMethod(method);
     sumUBeta = arma::mat(p, threadNum, arma::fill::zeros);
-
+    
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
     if (lowerMethod == "logistic") {
-        initialSolver<ADMMLogistic>(solvers);
+        initializeSolver<ADMMLogistic>(solvers);
     }
     else if (lowerMethod == "poisson") {
-        initialSolver<ADMMPoisson>(solvers);
+        initializeSolver<ADMMPoisson>(solvers);
     }
     else if (lowerMethod == "gaussian"){
-        initialSolver<ADMMGaussian>(solvers);
+        initializeSolver<ADMMGaussian>(solvers);
     }
-
     z = zWS;
 
     while (k <= maxIter) {
@@ -61,8 +78,81 @@ arma::vec ADMM::fit(const std::string method) {
         }
         k++;
     }
-    Rcpp::Rcout << "The total iterations: " << k << std::endl;
+    deleteSolver(solvers);
     return z;
+}
+
+void ADMM::setWeight(const double lambda) {
+    this->w = arma::vec(X.n_cols);
+    this->w.fill(lambda);
+    this->w[0] = 0;
+}
+
+void ADMM::setWeight(const arma::vec &weight) {
+    if (weight.empty()) {
+        this->w = arma::vec(X.n_cols, arma::fill::ones);
+        this->w[0] = 0;
+    }
+    else if (weight.n_elem == X.n_cols){
+        this->w = weight;
+    }
+    else if (weight.n_elem == X.n_cols - 1) {
+        this-> w = arma::vec(X.n_cols, arma::fill::zeros);
+        for (uint32_t i = 0; i < weight.n_elem; i++) {
+            this->w[i + 1] = weight[i];
+        }
+    }
+}
+
+void ADMM::setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &w) {
+    uint32_t p = X.n_cols;
+    setVec(this->betaWS, betaWS, p);
+    setVec(this->zWS, zWS, p);
+    setVec(this->uWS, uWS, p);
+}
+
+void ADMM::setInitialBeta(const arma::vec &beta) {
+    setVec(this->betaWS, betaWS, X.n_cols);
+}
+
+void ADMM::setKLB(const int KLB) {
+    if (KLB < 0) {
+        Rcpp::stop("The KLB should not be less than 0.");
+    }
+    this->KLB = KLB;
+}
+
+void ADMM::setMaxIterator(const int maxIter) {
+    if (maxIter < 0) {
+        Rcpp::stop("The maxIter should not be less than 0.");
+    }
+    this->maxIter = maxIter;
+}
+
+void ADMM::setThreadNumber(const int number) {
+    if (number <= 0) {
+        Rcpp::stop("The thread number should not be less than 1.");
+    }
+    omp_set_num_threads(number);
+    this->threadNum = number;
+}
+
+
+template <typename T>
+void ADMM::initializeSolver(std::vector<ADMMSolver *> &solvers) {
+    uint32_t n = X.n_rows;
+    double interval = n / static_cast<double>(threadNum);
+    for (uint32_t i = 0; i < threadNum; i++) {
+        uint32_t col0 = i * interval, col1 = (i + 1) * interval - 1;
+        arma::mat subX = X.rows(col0, col1);
+        solvers[i] = new T(X.rows(col0, col1), y.subvec(col0, col1), o, betaWS, uWS);
+    }
+}
+
+void ADMM::deleteSolver(std::vector<ADMMSolver *> &solvers) {
+    for (uint32_t i = 0; i < threadNum; i++) {
+        delete solvers[i];
+    }
 }
 
 arma::vec ADMM::updateUBeta(std::vector<ADMMSolver *> &solvers) {
@@ -119,45 +209,6 @@ bool ADMM::stopCriteria() {
     return supportIter >= KLB;
 }
 
-void ADMM::clear() {
-    X.clear();
-    sumUBeta.clear();
-    y.clear();
-    o.clear();
-    betaWS.clear();
-    zWS.clear();
-    uWS.clear();
-    w.clear();
-    z.clear();
-    preSupport.clear();
-    KLB = 1e3;
-    maxIter = 1e5;
-    threadNum = 1;
-}
-
-void ADMM::reset(const arma::mat &X, 
-                 const arma::vec &y, 
-                 const arma::vec &o,
-                 const arma::vec &betaWS,
-                 const arma::vec &zWS,
-                 const arma::vec &uWS,
-                 const arma::vec &w,
-                 const uint32_t KLB,
-                 const uint32_t maxIter,
-                 const uint32_t threadNum) {
-    this->X = X;
-    this->y = y;
-    uint32_t n = X.n_rows, p = X.n_cols;
-    setVec(this->o, o, n);
-    setVec(this->betaWS, betaWS, p);
-    setVec(this->zWS, zWS, p);
-    setVec(this->uWS, uWS, p);
-    setWeight(w);
-    this->KLB = KLB;
-    this->maxIter = maxIter;
-    this->threadNum = threadNum;
-}
-
 void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint32_t num) {
     if (source.empty()) {
         target = arma::vec(num, arma::fill::zeros);
@@ -165,42 +216,4 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint32_t num
     else {
         target = source;
     }
-}
-
-void ADMM::setWeight(const double lambda) {
-    this->w = arma::vec(X.n_cols);
-    this->w.fill(lambda);
-    this->w[0] = 0;
-}
-
-void ADMM::setWeight(const arma::vec &weight) {
-    if (weight.empty()) {
-        this->w = arma::vec(X.n_cols, arma::fill::ones);
-        this->w[0] = 0;
-    }
-    else if (weight.n_elem == X.n_cols){
-        this->w = weight;
-    }
-    else if (weight.n_elem == X.n_cols - 1) {
-        this-> w = arma::vec(X.n_cols, arma::fill::zeros);
-        for (uint32_t i = 0; i < weight.n_elem; i++) {
-            this->w[i + 1] = weight[i];
-        }
-    }
-}
-
-void ADMM::setThreadNumber(const int number) {
-    if (number <= 0) {
-        Rcpp::stop("The thread number should not be less than 1.");
-    }
-    omp_set_num_threads(number);
-    this->threadNum = number;
-}
-
-void ADMM::setMaxIterator(const int maxIter) {
-    this->maxIter = maxIter;
-}
-
-void ADMM::setKLB(const int KLB) {
-    this->KLB = KLB;
 }

@@ -1,8 +1,8 @@
 #include "ADMMSolver.h"
 #include <cmath>
 
-ADMMSolver::ADMMSolver( const arma::mat &X, 
-                        const arma::vec &y, 
+ADMMSolver::ADMMSolver( const arma::mat &X,
+                        const arma::vec &y,
                         const arma::vec &o,
                         const arma::vec beta,
                         const arma::vec u) {

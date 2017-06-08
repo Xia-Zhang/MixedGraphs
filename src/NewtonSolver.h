@@ -20,18 +20,18 @@ public:
                  uint32_t maxIter = 1e5,
                  double sigma = 1e-5);
     void setSolver(const arma::mat &X,
-              const arma::vec &y,
-              const arma::vec &o = arma::vec(),
-              double epsilon = 0.25,
-              uint32_t maxIter = 1e5,
-              double sigma = 1e-5);
+                   const arma::vec &y,
+                   const arma::vec &o = arma::vec(),
+                   double epsilon = 0.25,
+                   uint32_t maxIter = 1e5,
+                   double sigma = 1e-5);
     virtual arma::vec solve(){};
     arma::vec solve(const arma::mat &X,
-               const arma::vec &y,
-               const arma::vec &o = arma::vec(),
-               double epsilon = 0.25,
-               uint32_t maxIter = 1e5,
-               double sigma = 1e-5);
+                    const arma::vec &y,
+                    const arma::vec &o = arma::vec(),
+                    double epsilon = 0.25,
+                    uint32_t maxIter = 1e5,
+                    double sigma = 1e-5);
     virtual ~NewtonSolver(){};
 };
 

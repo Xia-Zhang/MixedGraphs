@@ -20,3 +20,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// testNewton
+List testNewton(const arma::mat& X, const arma::vec& y, const std::string method, const double lambda);
+RcppExport SEXP MixedGraphs_testNewton(SEXP XSEXP, SEXP ySEXP, SEXP methodSEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const std::string >::type method(methodSEXP);
+    Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
+    rcpp_result_gen = Rcpp::wrap(testNewton(X, y, method, lambda));
+    return rcpp_result_gen;
+END_RCPP
+}

@@ -22,9 +22,10 @@ using namespace Rcpp;
 List test(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     ADMM testADMM(X, y);
     testADMM.setWeight(lambda);
-    arma::vec result = testADMM.fit(method);
+    arma::vec result = arma::vec(1);
+    Rcpp::Rcout << testADMM.fit(method);
     //testADMM.setThreadNumber(4);
-    //result = testADMM.fit(method);
+    //Rcpp::Rcout << testADMM.fit(method);
     return List::create(Named("Result") = result);
 }
 
