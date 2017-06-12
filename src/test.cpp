@@ -29,6 +29,15 @@ List test(const arma::mat& X, const arma::vec& y, const std::string method = "Ga
     return List::create(Named("Result") = result);
 }
 
+// [[Rcpp::export]]
+List testADMM(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
+    ADMM testADMM(X, y);
+    testADMM.setKLB(1000);
+    testADMM.setWeight(lambda);
+    arma::vec result = testADMM.fit(method);
+    return List::create(Named("Result") = result);
+}
+
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 List testNewton(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {

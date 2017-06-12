@@ -81,7 +81,6 @@ arma::vec NewtonLogistic::solve() {
         }
         k++;
     }
-    Rcpp::Rcout << k << std::endl;
     return beta;
 }
 

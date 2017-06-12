@@ -5,6 +5,10 @@ test <- function(X, y, method = "Gaussian", lambda = 0.5) {
     .Call('MixedGraphs_test', PACKAGE = 'MixedGraphs', X, y, method, lambda)
 }
 
+testADMM <- function(X, y, method = "Gaussian", lambda = 0.5) {
+    .Call('MixedGraphs_testADMM', PACKAGE = 'MixedGraphs', X, y, method, lambda)
+}
+
 testNewton <- function(X, y, method = "Gaussian", lambda = 0.5) {
     .Call('MixedGraphs_testNewton', PACKAGE = 'MixedGraphs', X, y, method, lambda)
 }
