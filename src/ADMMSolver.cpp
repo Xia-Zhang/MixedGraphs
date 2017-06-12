@@ -1,5 +1,4 @@
 #include "ADMMSolver.h"
-#include <cmath>
 
 ADMMSolver::ADMMSolver( const arma::mat &X,
                         const arma::vec &y,
@@ -25,70 +24,51 @@ void ADMMSolver::updateU(const arma::vec &z) {
 
 arma::vec ADMMLogistic::getGradient(const arma::vec &z) {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double denominator;
-    arma::vec gradient(p, arma::fill::zeros);
+    arma::vec vecP(n);
     for (uint32_t i = 0; i < n; i++) {
-        denominator = 1 + exp( - (o[i] + arma::as_scalar(X.row(i) * beta)));
-        gradient += X.row(i).t() / denominator - y(i) * X.row(i).t();
+        vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
     }
-    gradient = gradient / n  + beta - z + u;
-    return gradient;
+    return X.t() * (vecP - y) / n + beta - z + u;
 }
 
 arma::mat ADMMLogistic::getHessian() {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double factor, denominator;
-    arma::mat hessian(p, p, arma::fill::zeros);
-
+    double doubleP;
+    arma::mat W(n, n, arma::fill::zeros);
+    
     for (uint32_t i = 0; i < n; i++) {
-        factor = exp( - (o[i] + arma::as_scalar(X.row(i) * beta)));
-        denominator = pow(1 + factor, 2);
-        for (uint32_t j = 0; j < p; j++) {
-            for (uint32_t k = 0; k < p; k++) {
-                hessian(j, k) += X(i, j) * X(i, k) * factor / denominator;
-            }
-        }
+        doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
+        W(i, i) = doubleP * (1 - doubleP);
     }
-    hessian /= n;
-    hessian += arma::eye<arma::mat>(p, p);
-    return hessian;
+    return X.t() * W * X / n + arma::eye<arma::mat>(p, p);
 }
 
 void ADMMLogistic::updateBeta(const arma::vec &z) {
-    beta = beta - getHessian().i() * getGradient(z);
+    beta = beta - arma::solve(getHessian(), getGradient(z));
 }
 
 arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double factor;
-    arma::vec gradient(p, arma::fill::zeros);
+    arma::vec vecV(n);
 
     for (uint32_t i = 0; i < n; i++) {
-        factor = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-        gradient += - y(i) * X.row(i).t() + X.row(i).t() * factor;
+        vecV[i] = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    gradient = gradient / n + beta - z + u;
-    return gradient;
+    return X.t() * (vecV - y) / n + beta - z + u;
 }
 
 arma::mat ADMMPoisson::getHessian() {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double factor;
-    arma::mat hessian(p, p, arma::fill::zeros);
+    arma::mat W(n, n, arma::fill::zeros);
 
     for (uint32_t i = 0; i < n; i++) {
-        factor = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-        for (uint32_t j = 0; j < p; j++)
-            for (uint32_t k = 0; k < p; k++) {
-                hessian(j, k) += X(i, j) * X(i, k) * factor;
-            }
+        W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    hessian += arma::eye<arma::mat>(p, p);
-    return hessian;
+    return X.t() * W * X / n + arma::eye<arma::mat>(p, p);
 }
 
 void ADMMPoisson::updateBeta(const arma::vec &z) {
-    beta = beta - getHessian().i() * getGradient(z);
+    beta = beta - arma::solve(getHessian(), getGradient(z));
 }
 
 void ADMMGaussian::updateBeta(const arma::vec &z) {

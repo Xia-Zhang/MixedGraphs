@@ -37,34 +37,23 @@ arma::vec NewtonSolver::solve(const arma::mat &X,
 
 arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double denominator;
-    arma::vec gradient(p, arma::fill::zeros);
-
+    arma::vec vecP(n);
     for (uint32_t i = 0; i < n; i++) {
-        denominator = 1 + exp( - (o[i] + arma::as_scalar(X.row(i) * beta)));
-        gradient += X.row(i).t() / denominator - y(i) * X.row(i).t();
+        vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
     }
-    gradient = gradient / n + epsilon * beta;
-    return gradient;
+    return X.t() * (vecP - y) / n + epsilon * beta;
 }
 
 arma::mat NewtonLogistic::getHessian(const arma::vec &beta) {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double factor, denominator;
-    arma::mat hessian(p, p, arma::fill::zeros);
-
+    double doubleP;
+    arma::mat W(n, n, arma::fill::zeros);
+    
     for (uint32_t i = 0; i < n; i++) {
-        factor = exp( - (o[i] + arma::as_scalar(X.row(i) * beta)));
-        denominator = pow(1 + factor, 2);
-        for (uint32_t j = 0; j < p; j++) {
-            for (uint32_t k = 0; k < p; k++) {
-                hessian(j, k) += X(i, j) * X(i, k) * factor / denominator;
-            }
-        }
+        doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
+        W(i, i) = doubleP * (1 - doubleP);
     }
-    hessian /= n;
-    hessian += epsilon * arma::eye<arma::mat>(p, p);
-    return hessian;
+    return X.t() * W * X / n + epsilon * arma::eye<arma::mat>(p, p);
 }
 
 arma::vec NewtonLogistic::solve() {
@@ -74,7 +63,7 @@ arma::vec NewtonLogistic::solve() {
     }
     arma::vec beta(X.n_cols, arma::fill::zeros), d_beta;
     while (k < maxIter) {
-        d_beta = getHessian(beta).i() * getGradient(beta);
+        d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
         if (sum(arma::abs(d_beta)) < sigma) {
             break;
@@ -86,31 +75,22 @@ arma::vec NewtonLogistic::solve() {
 
 arma::vec NewtonPoisson::getGradient(const arma::vec &beta) {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double factor;
-    arma::vec gradient(p, arma::fill::zeros);
+    arma::vec vecV(n);
 
     for (uint32_t i = 0; i < n; i++) {
-        factor = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-        gradient += - y(i) * X.row(i).t() + X.row(i).t() * factor;
+        vecV[i] = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    gradient = gradient / n + epsilon * beta;
-    return gradient;
+    return X.t() * (vecV - y) / n + epsilon * beta;
 }
 
 arma::mat NewtonPoisson::getHessian(const arma::vec &beta) {
     uint32_t n = X.n_rows, p = X.n_cols;
-    double factor;
-    arma::mat hessian(p, p, arma::fill::zeros);
+    arma::mat W(n, n, arma::fill::zeros);
 
     for (uint32_t i = 0; i < n; i++) {
-        factor = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-        for (uint32_t j = 0; j < p; j++)
-            for (uint32_t k = 0; k < p; k++) {
-                hessian(j, k) += X(i, j) * X(i, k) * factor;
-            }
+        W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    hessian += epsilon * arma::eye<arma::mat>(p, p);
-    return hessian;
+    return X.t() * W * X / n + epsilon * arma::eye<arma::mat>(p, p);
 }
 
 arma::vec NewtonPoisson::solve() {
@@ -120,7 +100,7 @@ arma::vec NewtonPoisson::solve() {
     }
     arma::vec beta(X.n_cols, arma::fill::zeros), d_beta;
     while (k < maxIter) {
-        d_beta = getHessian(beta).i() * getGradient(beta);
+        d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
         if ( std::sqrt(arma::as_scalar(d_beta.t() * d_beta)) < sigma) {
             break;
