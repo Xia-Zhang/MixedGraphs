@@ -1,5 +1,5 @@
 context("Test ADMM Solver")
-
+library("glmnet")
 
 compare_supp <- function(x1, x2) {
     count <- 0
@@ -14,7 +14,6 @@ compare_supp <- function(x1, x2) {
 test_that("Compare ADMM Logistic solver with glmnet.", {
     X <- matrix(rnorm(500), ncol = 10)
     y <- rbinom(50, 1, 0.6)
-    library("glmnet")
 
     result_glmnet <- coef(glmnet(X, y, family = "binomial"), s = 1)
     result_ADMM <- .Call('MixedGraphs_testADMM', PACKAGE = 'MixedGraphs', cbind(1, X), y, "logistic", 1) $ Result
