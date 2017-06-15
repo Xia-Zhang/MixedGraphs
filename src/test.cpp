@@ -22,6 +22,7 @@ using namespace Rcpp;
 List test(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     ADMM testADMM(X, y);
     testADMM.setWeight(lambda);
+    testADMM.setKLB(8);
     arma::vec result = testADMM.fit(method);
     //testADMM.setThreadNumber(4);
     //Rcpp::Rcout << testADMM.fit(method);
@@ -31,9 +32,6 @@ List test(const arma::mat& X, const arma::vec& y, const std::string method = "Ga
 // [[Rcpp::export]]
 List testADMM(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     ADMM testADMM(X, y);
-    //testADMM.setKLB(1000);
-    Rcpp::Rcout << lambda/ (X.n_cols - 1) << std::endl;
-    //testADMM.setWeight(lambda/ (X.n_cols - 1));
     testADMM.setWeight(lambda);
     arma::vec result = testADMM.fit(method);
     return List::create(Named("Result") = result);
