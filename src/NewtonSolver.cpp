@@ -25,6 +25,25 @@ void NewtonSolver::setSolver(const arma::mat &X,
     this->sigma = sigma;
 }
 
+arma::vec NewtonSolver::fit(std::string method) {
+    NewtonSolver * solver;
+    std::string lowerMethod(method);
+
+    std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
+    if (lowerMethod == "logistic") {
+        solver = new NewtonLogistic();
+    }
+    else if (lowerMethod == "poisson") {
+        solver = new NewtonPoisson();
+    }
+    else if (lowerMethod == "gaussian"){
+        solver = new NewtonGaussian();
+    }
+
+    solver->setSolver(this->X, this->y, this->o, this->epsilon);
+    return solver->solve();
+}
+
 arma::vec NewtonSolver::solve(const arma::mat &X,
                     const arma::vec &y,
                     const arma::vec &o,
@@ -33,6 +52,10 @@ arma::vec NewtonSolver::solve(const arma::mat &X,
                     double sigma){
     setSolver(X, y, o, epsilon, maxIter, sigma);
     return solve();
+}
+
+void NewtonSolver::setEpsilon(const double epsilon) {
+    this->epsilon = epsilon;
 }
 
 arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
@@ -65,7 +88,7 @@ arma::vec NewtonLogistic::solve() {
     while (k < maxIter) {
         d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
-        if (sum(arma::abs(d_beta)) < sigma) {
+        if (sum(arma::sqrt(d_beta)) < sigma) {
             break;
         }
         k++;

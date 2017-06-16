@@ -3,37 +3,38 @@
 ADMM::ADMM (const arma::mat &X,
             const arma::vec &y,
             const arma::vec &o,
+            const arma::vec &w,
             const arma::vec &betaWS,
             const arma::vec &zWS,
             const arma::vec &uWS,
-            const arma::vec &w,
             const uint32_t KLB,
             const uint32_t maxIter,
             const uint32_t threadNum) {
-    reset(X, y, o, betaWS, zWS, uWS, w, KLB, maxIter, threadNum);
+    reset(X, y, o, w, betaWS, zWS, uWS, KLB, maxIter, threadNum);
 }
 
 void ADMM::reset(const arma::mat &X,
                  const arma::vec &y,
                  const arma::vec &o,
+                 const arma::vec &w,
                  const arma::vec &betaWS,
                  const arma::vec &zWS,
                  const arma::vec &uWS,
-                 const arma::vec &w,
                  const uint32_t KLB,
                  const uint32_t maxIter,
                  const uint32_t threadNum) {
+    uint32_t n = X.n_rows, p = X.n_cols;
     this->X = X;
     this->y = y;
-    uint32_t n = X.n_rows, p = X.n_cols;
     setVec(this->o, o, n);
+    setWeight(w);
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
     setVec(this->uWS, uWS, p);
-    setWeight(w);
     this->KLB = KLB;
     this->maxIter = maxIter;
     this->threadNum = threadNum;
+    supportBeta = arma::vec(p, arma::fill::zeros);
 }
 
 void ADMM::clear() {
@@ -46,7 +47,7 @@ void ADMM::clear() {
     uWS.clear();
     w.clear();
     z.clear();
-    preSupport.clear();
+    supportBeta.clear();
     KLB = 0;
     maxIter = 0;
     threadNum = 0;
@@ -184,27 +185,13 @@ void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
 }
 
 bool ADMM::stopCriteria() {
-    if (preSupport.empty()) {
-        preSupport = arma::vec(z.n_elem, arma::fill::zeros);
-        supportIter = -1;
-    }
-    bool remainSame = true;
-    for (uint32_t i = 0; i < z.n_elem; i++) {
-        if (remainSame) {
-            if (preSupport[i] == !z[i]) {
-                remainSame = false;
-                preSupport[i] = (z[i] == 0) ? 0 : 1;
-            }
-        }
-        else {
-            preSupport[i] = (z[i] == 0) ? 0 : 1;
-        }
-    }
+    bool remainSame = arma::all(sign(supportBeta) == sign(z));
     if (remainSame) {
         supportIter += 1;
     }
     else {
         supportIter = 0;
+        supportBeta = z;
     }
     return supportIter >= KLB;
 }

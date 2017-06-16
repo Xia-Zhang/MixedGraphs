@@ -19,7 +19,7 @@ private:
     arma::vec uWS;
     arma::vec w;
     arma::vec z;
-    arma::vec preSupport;
+    arma::vec supportBeta;
     uint32_t supportIter;
     uint32_t KLB;
     uint32_t maxIter;
@@ -38,20 +38,20 @@ public:
     ADMM(const arma::mat &X, 
          const arma::vec &y,
          const arma::vec &o = arma::vec(),
+         const arma::vec &w = arma::vec(),
          const arma::vec &betaWS = arma::vec(),
          const arma::vec &zWS = arma::vec(),
          const arma::vec &uWS = arma::vec(),
-         const arma::vec &w = arma::vec(),
          const uint32_t KLB = 5,
          const uint32_t maxIter = 1e8,
          const uint32_t threadNum = 1);
     void reset(const arma::mat &X, 
                const arma::vec &y, 
                const arma::vec &o = arma::vec(),
+               const arma::vec &w = arma::vec(),
                const arma::vec &betaWS = arma::vec(),
                const arma::vec &zWS = arma::vec(),
                const arma::vec &uWS = arma::vec(),
-               const arma::vec &w = arma::vec(),
                const uint32_t KLB = 5,
                const uint32_t maxIter = 1e8,
                const uint32_t threadNum = 1);

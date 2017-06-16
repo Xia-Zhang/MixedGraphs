@@ -25,6 +25,7 @@ public:
                    double epsilon = 0.25,
                    uint32_t maxIter = 1e5,
                    double sigma = 1e-5);
+    arma::vec fit(std::string method);
     virtual arma::vec solve(){};
     arma::vec solve(const arma::mat &X,
                     const arma::vec &y,
@@ -32,6 +33,7 @@ public:
                     double epsilon = 0.25,
                     uint32_t maxIter = 1e5,
                     double sigma = 1e-5);
+    void setEpsilon(const double epsilon = 0.25);
     virtual ~NewtonSolver(){};
 };
 

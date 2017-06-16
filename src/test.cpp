@@ -23,7 +23,12 @@ List test(const arma::mat& X, const arma::vec& y, const std::string method = "Ga
     ADMM testADMM(X, y);
     testADMM.setWeight(lambda);
     testADMM.setKLB(8);
-    arma::vec result = testADMM.fit(method);
+    arma::vec result;
+    arma::uvec indices;
+    indices << 2 << 3;
+    result = testADMM.fit(method);
+    Rcout << result.size();
+    Rcout << result.elem(indices);
     //testADMM.setThreadNumber(4);
     //Rcpp::Rcout << testADMM.fit(method);
     return List::create(Named("Result") = result);
@@ -40,22 +45,17 @@ List testADMM(const arma::mat& X, const arma::vec& y, const std::string method =
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::export]]
 List testNewton(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
-    NewtonSolver *solver;
-    std::string lowerMethod(method);
-
-    std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
-    if (lowerMethod == "logistic") {
-        solver = new NewtonLogistic();
-    }
-    else if (lowerMethod == "poisson") {
-        solver = new NewtonPoisson();
-    }
-    else if (lowerMethod == "gaussian"){
-        solver = new NewtonGaussian();
-    }
-
-    arma::vec o(X.n_rows, arma::fill::zeros);
-    solver->setSolver(X, y, o, lambda);
-    arma::vec result = solver->solve();
+    NewtonSolver newtonSolver(X, y);
+    newtonSolver.setEpsilon(lambda);
+    arma::vec result = newtonSolver.fit(method);
     return List::create(Named("Result") = result);
 }
+
+// List testBRAIL() {
+//     arma::mat i_mat(5, 5);
+//     i_mat.fill(1.1);
+//     List X = List::create(i_mat, i_mat);
+//     arma::vec y(5);
+//     y.fill(2.1);
+//     return BRAIL(X, y, "poisson");
+// }
