@@ -21,8 +21,8 @@ test_that("Compare ADMM Logistic solver with glmnet.", {
 })
 
 test_that("Compare ADMM Poisson solver with glmnet.", {
-    X <- matrix(rnorm(1000), ncol = 10)
-    y <- rpois(100, 3)
+    X <- matrix(rnorm(1000), ncol = 5)
+    y <- rpois(200, 3)
 
     result_glmnet <- coef(glmnet(X, y, family = "poisson", standardize=FALSE, standardize.response=FALSE), s = 0.5)
     result_ADMM <- .Call('MixedGraphs_testADMM', PACKAGE = 'MixedGraphs', cbind(1, X), y, "poisson", 0.5) $ Result

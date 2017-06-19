@@ -13,3 +13,7 @@ testNewton <- function(X, y, method = "Gaussian", lambda = 0.5) {
     .Call('MixedGraphs_testNewton', PACKAGE = 'MixedGraphs', X, y, method, lambda)
 }
 
+testBRAIL <- function() {
+    .Call('MixedGraphs_testBRAIL', PACKAGE = 'MixedGraphs')
+}
+

@@ -20,10 +20,10 @@ private:
     arma::vec w;
     arma::vec z;
     arma::vec supportBeta;
-    uint32_t supportIter;
-    uint32_t KLB;
-    uint32_t maxIter;
-    uint32_t threadNum;
+    uint64_t supportIter;
+    uint64_t KLB;
+    uint64_t maxIter;
+    uint64_t threadNum;
 
     template <typename T>
     void initializeSolver(std::vector<ADMMSolver *> &solvers);
@@ -32,7 +32,7 @@ private:
     void updateZ();
     void softThreashold(const arma::vec &sum, arma::vec &value);
     bool stopCriteria();
-    void setVec(arma::vec &target, const arma::vec &source, const uint32_t num);
+    void setVec(arma::vec &target, const arma::vec &source, const uint64_t num);
 
 public:
     ADMM(const arma::mat &X, 
@@ -42,9 +42,9 @@ public:
          const arma::vec &betaWS = arma::vec(),
          const arma::vec &zWS = arma::vec(),
          const arma::vec &uWS = arma::vec(),
-         const uint32_t KLB = 5,
-         const uint32_t maxIter = 1e8,
-         const uint32_t threadNum = 1);
+         const uint64_t KLB = 5,
+         const uint64_t maxIter = 1e8,
+         const uint64_t threadNum = 1);
     void reset(const arma::mat &X, 
                const arma::vec &y, 
                const arma::vec &o = arma::vec(),
@@ -52,18 +52,18 @@ public:
                const arma::vec &betaWS = arma::vec(),
                const arma::vec &zWS = arma::vec(),
                const arma::vec &uWS = arma::vec(),
-               const uint32_t KLB = 5,
-               const uint32_t maxIter = 1e8,
-               const uint32_t threadNum = 1);
+               const uint64_t KLB = 5,
+               const uint64_t maxIter = 1e8,
+               const uint64_t threadNum = 1);
     void clear();
     arma::vec fit(const std::string method);
     void setWeight(const double lambda);
     void setWeight(const arma::vec &weight = arma::vec());
     void setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &w);
     void setInitialBeta(const arma::vec &beta);
-    void setKLB(const int KLB);
-    void setMaxIterator(const int maxIter);
-    void setThreadNumber(const int number);
+    void setKLB(const uint64_t KLB);
+    void setMaxIterator(const uint64_t maxIter);
+    void setThreadNumber(const uint64_t number);
     ~ADMM(){};
 };
 #endif
