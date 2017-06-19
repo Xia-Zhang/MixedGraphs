@@ -47,11 +47,11 @@ double getC(const mat &X, const vec &beta, std::string &method) {
 
 // [[Rcpp::plugins(cpp11)]]
 vec uniformRandom(uint64_t p) {
-    std::default_random_engine random(time(NULL));
+    std::random_device rd;
     std::uniform_real_distribution<double> uniform(0.5, 1.5);
     vec gamma(p);
     for (uint64_t i = 0; i < p; i++) {
-        gamma[i] = uniform(random);
+        gamma[i] = uniform(rd);
     }
     return gamma;
 }
@@ -59,6 +59,7 @@ vec uniformRandom(uint64_t p) {
 void bootstrapSample(const field<mat> &X, const vec &y, field<mat> &sample_X, vec &sample_y) {
     uint64_t n = y.size(), K = X.n_elem, rand_num;
     sample_X = X;
+    sample_y.set_size(n);
     std::random_device rd;
     for (uint64_t i = 0; i < n; i++) {
         rand_num = rd() % n;
@@ -79,7 +80,6 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
     while (true) {
         pre_beta = beta;
         for (uint64_t k = 0; k < K; k++) {
-
             p = X[k].n_cols;
             lambda.set_size(p);
             betaK_mat.set_size(B, p);
@@ -87,14 +87,12 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
             tmp_lambda = c / n * (std::sqrt(sum(square(beta[k]))) );
             tmp_lambda *=  sqrt(log(p) * sum(abs(sign(beta[k]))) );
             lambda.fill(tmp_lambda);
-
             for (uint64_t j = 0; j < p; j++) {
                 if (beta[k][j] == 0) {
                     lambda *= 2;
                 }
             }
-
-            #pragma omp parallel for
+            //#pragma omp parallel for
             for (uint64_t b = 0; b < B; b++) {
                 field<mat> sample_X(X);
                 vec sample_y(n), o(n, fill::zeros), w;
@@ -105,13 +103,11 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
                     }
                     o += sample_X[l] * beta[l];
                 }
-                w = uniformRandom(p) % lambda; // ?
+                w = uniformRandom(p) % lambda;
                 ADMM admm(sample_X[k], sample_y, o, w);
-                betaK_mat.row(b) = admm.fit(family);
+                betaK_mat.row(b) = admm.fit(family).t();
             }
-
             umat supportIndex = (sum(sign(betaK_mat))/ static_cast<double> (B) >= tau);
-
             mat sub_X = X[k].rows(supportIndex);
             vec sub_o(n, fill::zeros);
             for (uint64_t l = 0; l < K; l++) {
@@ -128,7 +124,6 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
                 beta[k][index] = sub_beta[beta_i++];
             }
         }
-
         if (checkStopCriteria(pre_beta, beta)) {
             break;
         }
