@@ -88,7 +88,7 @@ arma::vec NewtonLogistic::solve() {
     while (k < maxIter) {
         d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
-        if (sum(arma::sqrt(d_beta)) < sigma) {
+        if (std::sqrt(sum(arma::square(d_beta))) < sigma) {
             break;
         }
         k++;

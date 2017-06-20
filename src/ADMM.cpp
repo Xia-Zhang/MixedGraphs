@@ -7,10 +7,11 @@ ADMM::ADMM (const arma::mat &X,
             const arma::vec &betaWS,
             const arma::vec &zWS,
             const arma::vec &uWS,
-            const uint64_t KLB,
-            const uint64_t maxIter,
-            const uint64_t threadNum) {
-    reset(X, y, o, w, betaWS, zWS, uWS, KLB, maxIter, threadNum);
+            double thresh,
+            uint64_t KLB,
+            uint64_t maxIter,
+            uint64_t threadNum) {
+    reset(X, y, o, w, betaWS, zWS, uWS, 0.0, KLB, maxIter, threadNum);
 }
 
 void ADMM::reset(const arma::mat &X,
@@ -20,9 +21,10 @@ void ADMM::reset(const arma::mat &X,
                  const arma::vec &betaWS,
                  const arma::vec &zWS,
                  const arma::vec &uWS,
-                 const uint64_t KLB,
-                 const uint64_t maxIter,
-                 const uint64_t threadNum) {
+                 double thresh,
+                 uint64_t KLB,
+                 uint64_t maxIter,
+                 uint64_t threadNum) {
     uint64_t n = X.n_rows, p = X.n_cols;
     this->X = X;
     this->y = y;
@@ -31,10 +33,11 @@ void ADMM::reset(const arma::mat &X,
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
     setVec(this->uWS, uWS, p);
+    this->thresh = thresh;
     this->KLB = KLB;
     this->maxIter = maxIter;
     this->threadNum = threadNum;
-    supportBeta = arma::vec(p, arma::fill::zeros);
+    preZ = arma::vec(p, arma::fill::zeros);
 }
 
 void ADMM::clear() {
@@ -47,7 +50,8 @@ void ADMM::clear() {
     uWS.clear();
     w.clear();
     z.clear();
-    supportBeta.clear();
+    preZ.clear();
+    thresh = 0.0;
     KLB = 0;
     maxIter = 0;
     threadNum = 0;
@@ -116,28 +120,34 @@ void ADMM::setInitialBeta(const arma::vec &beta) {
     setVec(this->betaWS, betaWS, X.n_cols);
 }
 
-void ADMM::setKLB(const uint64_t KLB) {
+void ADMM::setThresh(const double thresh) {
+    if (thresh < 0) {
+        Rcpp::stop("The thresh should not be negative!");
+    }
+    this->thresh = thresh;
+}
+
+void ADMM::setKLB(uint64_t KLB) {
     if (KLB < 0) {
-        Rcpp::stop("The KLB should not be less than 0.");
+        Rcpp::stop("The KLB should not be negative!");
     }
     this->KLB = KLB;
 }
 
-void ADMM::setMaxIterator(const uint64_t maxIter) {
+void ADMM::setMaxIterator(uint64_t maxIter) {
     if (maxIter < 0) {
         Rcpp::stop("The maxIter should not be less than 0.");
     }
     this->maxIter = maxIter;
 }
 
-void ADMM::setThreadNumber(const uint64_t number) {
+void ADMM::setThreadNumber(uint64_t number) {
     if (number <= 0) {
         Rcpp::stop("The thread number should not be less than 1.");
     }
     omp_set_num_threads(number);
     this->threadNum = number;
 }
-
 
 template <typename T>
 void ADMM::initializeSolver(std::vector<ADMMSolver *> &solvers) {
@@ -185,15 +195,26 @@ void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
 }
 
 bool ADMM::stopCriteria() {
-    bool remainSame = arma::all(sign(supportBeta) == sign(z));
-    if (remainSame) {
-        supportIter += 1;
+    bool result = true;
+    if (!KLB && thresh) {
+        result = (std::sqrt(arma::sum(arma::square(z - preZ))) <= thresh);
     }
     else {
-        supportIter = 0;
-        supportBeta = z;
+        uint64_t tmpKLB = 5;
+        bool remainSame = arma::all(sign(preZ) == sign(z));
+        if (!KLB) {
+            tmpKLB = KLB;
+        }
+        if (remainSame) {
+            supportIter += 1;
+        }
+        else {
+            supportIter = 0;
+        }
+        result = (supportIter >= tmpKLB);
     }
-    return supportIter >= KLB;
+    preZ = z;
+    return result;
 }
 
 void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint64_t num) {
