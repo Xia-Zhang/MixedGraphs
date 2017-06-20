@@ -7,7 +7,8 @@ Author: Xia Zhang
 Maintainer: Xia Zhang <zhangxia9403@gmail.com>
 Description: An R package for mixed graphical models. The package allow for fitting, simulating from, and visualizing mixed graphical models.
 License: GPL-2
-Imports: Rcpp (>= 0.12.9)
-LinkingTo: Rcpp, RcppArmadillo
+Imports: Rcpp (>= 0.12.9), RcppParallel
+LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 RoxygenNote: 6.0.1
 Suggests: testthat, glmnet
+SystemRequirements: GNU make

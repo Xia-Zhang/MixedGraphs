@@ -1,4 +1,6 @@
 #include "ADMM.h"
+#include <RcppParallel.h>
+using namespace RcppParallel;
 
 ADMM::ADMM (const arma::mat &X,
             const arma::vec &y,
@@ -145,7 +147,7 @@ void ADMM::setThreadNumber(uint64_t number) {
     if (number <= 0) {
         Rcpp::stop("The thread number should not be less than 1.");
     }
-    omp_set_num_threads(number);
+    //RcppParallel::setThreadOptions(numThreads = 4);
     this->threadNum = number;
 }
 
@@ -156,7 +158,7 @@ void ADMM::initializeSolver(std::vector<ADMMSolver *> &solvers) {
     for (uint64_t i = 0; i < threadNum; i++) {
         uint64_t col0 = i * interval, col1 = (i + 1) * interval - 1;
         arma::mat subX = X.rows(col0, col1);
-        solvers[i] = new T(X.rows(col0, col1), y.subvec(col0, col1), o, betaWS, uWS);
+        solvers[i] = new T(X.rows(col0, col1), y.subvec(col0, col1), o.subvec(col0, col1), betaWS, uWS);
     }
 }
 
@@ -166,12 +168,22 @@ void ADMM::deleteSolver(std::vector<ADMMSolver *> &solvers) {
     }
 }
 
+struct admmParallel: public Worker {
+    const std::vector<ADMMSolver *> input;
+    const arma::vec &z;
+    arma::mat &sum;
+    admmParallel(const std::vector<ADMMSolver *> &input, const arma::vec &z, arma::mat &sum) : input(input), z(z), sum(sum){}
+    void operator()(uint64_t begin, uint64_t end) {
+        for (uint64_t i = begin; i < end; i++) {
+            sum.col(i) = input[i]->solve(z);
+        }
+    }
+};
+
 arma::vec ADMM::updateUBeta(std::vector<ADMMSolver *> &solvers) {
     uint64_t p = X.n_cols;
-    #pragma omp parallel for
-    for (uint64_t i = 0; i < threadNum; i++) {
-         sumUBeta.col(i) = solvers[i]->solve(z);
-    }
+    admmParallel admmP(solvers, z, sumUBeta);
+    parallelFor(0, threadNum, admmP);
     return arma::sum(sumUBeta, 1) / threadNum;
 }
 
