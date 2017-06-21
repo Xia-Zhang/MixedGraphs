@@ -17,7 +17,7 @@ private:
     arma::vec betaWS;
     arma::vec zWS;
     arma::vec uWS;
-    arma::vec w;
+    arma::vec lambda;
     arma::vec z;
     arma::vec preZ;
     double thresh;
@@ -39,30 +39,30 @@ public:
     ADMM(const arma::mat &X,
          const arma::vec &y,
          const arma::vec &o = arma::vec(),
-         const arma::vec &w = arma::vec(),
-         const arma::vec &betaWS = arma::vec(),
-         const arma::vec &zWS = arma::vec(),
-         const arma::vec &uWS = arma::vec(),
+         const arma::vec &lambda = arma::vec(),
          double thresh = 0.0,
          uint64_t KLB = 0,
          uint64_t maxIter = 1e8,
-         uint64_t threadNum = 1);
+         uint64_t threadNum = 1,
+         const arma::vec &betaWS = arma::vec(),
+         const arma::vec &zWS = arma::vec(),
+         const arma::vec &uWS = arma::vec());
     void reset(const arma::mat &X, 
                const arma::vec &y, 
                const arma::vec &o = arma::vec(),
-               const arma::vec &w = arma::vec(),
-               const arma::vec &betaWS = arma::vec(),
-               const arma::vec &zWS = arma::vec(),
-               const arma::vec &uWS = arma::vec(),
+               const arma::vec &lambda = arma::vec(),
                double thresh = 0.0,
                uint64_t KLB = 0,
                uint64_t maxIter = 1e8,
-               uint64_t threadNum = 1);
+               uint64_t threadNum = 1,
+               const arma::vec &betaWS = arma::vec(),
+               const arma::vec &zWS = arma::vec(),
+               const arma::vec &uWS = arma::vec());
     void clear();
     arma::vec fit(const std::string method);
     void setWeight(const double lambda);
     void setWeight(const arma::vec &weight = arma::vec());
-    void setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &w);
+    void setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &lambda);
     void setInitialBeta(const arma::vec &beta);
     void setThresh(double thresh);
     void setKLB(uint64_t KLB);
@@ -70,4 +70,7 @@ public:
     void setThreadNumber(uint64_t number);
     ~ADMM(){};
 };
+
+Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter, const uint64_t threads);
+
 #endif

@@ -5,40 +5,40 @@ using namespace RcppParallel;
 ADMM::ADMM (const arma::mat &X,
             const arma::vec &y,
             const arma::vec &o,
-            const arma::vec &w,
-            const arma::vec &betaWS,
-            const arma::vec &zWS,
-            const arma::vec &uWS,
+            const arma::vec &lambda,
             double thresh,
             uint64_t KLB,
             uint64_t maxIter,
-            uint64_t threadNum) {
-    reset(X, y, o, w, betaWS, zWS, uWS, 0.0, KLB, maxIter, threadNum);
+            uint64_t threadNum,
+            const arma::vec &betaWS,
+            const arma::vec &zWS,
+            const arma::vec &uWS) {
+    reset(X, y, o, lambda, thresh, KLB, maxIter, threadNum, betaWS, zWS, uWS);
 }
 
 void ADMM::reset(const arma::mat &X,
                  const arma::vec &y,
                  const arma::vec &o,
-                 const arma::vec &w,
-                 const arma::vec &betaWS,
-                 const arma::vec &zWS,
-                 const arma::vec &uWS,
+                 const arma::vec &lambda,
                  double thresh,
                  uint64_t KLB,
                  uint64_t maxIter,
-                 uint64_t threadNum) {
+                 uint64_t threadNum,
+                 const arma::vec &betaWS,
+                 const arma::vec &zWS,
+                 const arma::vec &uWS) {
     uint64_t n = X.n_rows, p = X.n_cols;
     this->X = X;
     this->y = y;
     setVec(this->o, o, n);
-    setWeight(w);
-    setVec(this->betaWS, betaWS, p);
-    setVec(this->zWS, zWS, p);
-    setVec(this->uWS, uWS, p);
+    setWeight(lambda);
     this->thresh = thresh;
     this->KLB = KLB;
     this->maxIter = maxIter;
     this->threadNum = threadNum;
+    setVec(this->betaWS, betaWS, p);
+    setVec(this->zWS, zWS, p);
+    setVec(this->uWS, uWS, p);
     preZ = arma::vec(p, arma::fill::zeros);
 }
 
@@ -50,7 +50,7 @@ void ADMM::clear() {
     betaWS.clear();
     zWS.clear();
     uWS.clear();
-    w.clear();
+    lambda.clear();
     z.clear();
     preZ.clear();
     thresh = 0.0;
@@ -90,28 +90,28 @@ arma::vec ADMM::fit(const std::string method) {
 }
 
 void ADMM::setWeight(const double lambda) {
-    this->w = arma::vec(X.n_cols);
-    this->w.fill(lambda);
-    this->w[0] = 0;
+    this->lambda = arma::vec(X.n_cols);
+    this->lambda.fill(lambda);
+    this->lambda[0] = 0;
 }
 
 void ADMM::setWeight(const arma::vec &weight) {
     if (weight.empty()) {
-        this->w = arma::vec(X.n_cols, arma::fill::ones);
-        this->w[0] = 0;
+        this->lambda = arma::vec(X.n_cols, arma::fill::ones);
+        this->lambda[0] = 0;
     }
     else if (weight.n_elem == X.n_cols){
-        this->w = weight;
+        this->lambda = weight;
     }
     else if (weight.n_elem == X.n_cols - 1) {
-        this-> w = arma::vec(X.n_cols, arma::fill::zeros);
+        this-> lambda = arma::vec(X.n_cols, arma::fill::zeros);
         for (uint64_t i = 0; i < weight.n_elem; i++) {
-            this->w[i + 1] = weight[i];
+            this->lambda[i + 1] = weight[i];
         }
     }
 }
 
-void ADMM::setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &w) {
+void ADMM::setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &lambda) {
     uint64_t p = X.n_cols;
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
@@ -194,11 +194,11 @@ void ADMM::updateZ() {
 void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
     uint64_t p = X.n_cols;
     for (uint64_t i = 0; i < p; i++) {
-        if (sum[i] > w[i]) {
-            value[i] = sum[i] - w[i];
+        if (sum[i] > lambda[i]) {
+            value[i] = sum[i] - lambda[i];
         }
-        else if (sum[i] < (-1) * w[i]) {
-            value[i] = sum[i] + w[i];
+        else if (sum[i] < (-1) * lambda[i]) {
+            value[i] = sum[i] + lambda[i];
         }
         else {
             value[i] = 0;
@@ -236,4 +236,11 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint64_t num
     else {
         target = source;
     }
+}
+
+// [[Rcpp::export]]
+Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter, const uint64_t threads) {
+    ADMM admm(X, y, o, lambda, thresh, KLB, maxIter, threads);
+    arma::vec coef = admm.fit(family);
+    return Rcpp::List::create(Rcpp::Named("Coef") = coef); 
 }

@@ -6,6 +6,25 @@
 
 using namespace Rcpp;
 
+// glmLasso
+Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec& lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter, const uint64_t threads);
+RcppExport SEXP MixedGraphs_glmLasso(SEXP XSEXP, SEXP ySEXP, SEXP oSEXP, SEXP lambdaSEXP, SEXP familySEXP, SEXP KLBSEXP, SEXP threshSEXP, SEXP maxIterSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type o(oSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const uint64_t >::type KLB(KLBSEXP);
+    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< const uint64_t >::type maxIter(maxIterSEXP);
+    Rcpp::traits::input_parameter< const uint64_t >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(glmLasso(X, y, o, lambda, family, KLB, thresh, maxIter, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // test
 List test(const arma::mat& X, const arma::vec& y, const std::string method, const double lambda);
 RcppExport SEXP MixedGraphs_test(SEXP XSEXP, SEXP ySEXP, SEXP methodSEXP, SEXP lambdaSEXP) {
@@ -57,4 +76,18 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(testBRAIL());
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"MixedGraphs_glmLasso", (DL_FUNC) &MixedGraphs_glmLasso, 9},
+    {"MixedGraphs_test", (DL_FUNC) &MixedGraphs_test, 4},
+    {"MixedGraphs_testADMM", (DL_FUNC) &MixedGraphs_testADMM, 4},
+    {"MixedGraphs_testNewton", (DL_FUNC) &MixedGraphs_testNewton, 4},
+    {"MixedGraphs_testBRAIL", (DL_FUNC) &MixedGraphs_testBRAIL, 0},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_MixedGraphs(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

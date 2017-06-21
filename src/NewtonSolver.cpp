@@ -3,26 +3,26 @@
 NewtonSolver::NewtonSolver(const arma::mat &X,
                            const arma::vec &y,
                            const arma::vec &o,
-                           double epsilon,
+                           double lambda,
                            uint64_t maxIter,
-                           double sigma) {
-    setSolver(X, y, o, epsilon, maxIter, sigma);
+                           double thresh) {
+    setSolver(X, y, o, lambda, maxIter, thresh);
 }
 
 void NewtonSolver::setSolver(const arma::mat &X,
                            const arma::vec &y,
                            const arma::vec &o,
-                           double epsilon,
+                           double lambda,
                            uint64_t maxIter,
-                           double sigma) {
+                           double thresh) {
     this->X = X;
     this->y = y;
     if (o.empty())
         this->o = arma::vec(X.n_rows, arma::fill::zeros);
     else this->o = o;
-    this->epsilon = epsilon;
+    this->lambda = lambda;
     this->maxIter = maxIter;
-    this->sigma = sigma;
+    this->thresh = thresh;
 }
 
 arma::vec NewtonSolver::fit(std::string method) {
@@ -40,22 +40,22 @@ arma::vec NewtonSolver::fit(std::string method) {
         solver = new NewtonGaussian();
     }
 
-    solver->setSolver(this->X, this->y, this->o, this->epsilon);
+    solver->setSolver(this->X, this->y, this->o, this->lambda);
     return solver->solve();
 }
 
 arma::vec NewtonSolver::solve(const arma::mat &X,
                     const arma::vec &y,
                     const arma::vec &o,
-                    double epsilon,
+                    double lambda,
                     uint64_t maxIter,
-                    double sigma){
-    setSolver(X, y, o, epsilon, maxIter, sigma);
+                    double thresh){
+    setSolver(X, y, o, lambda, maxIter, thresh);
     return solve();
 }
 
-void NewtonSolver::setEpsilon(const double epsilon) {
-    this->epsilon = epsilon;
+void NewtonSolver::setLambda(const double lambda) {
+    this->lambda = lambda;
 }
 
 arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
@@ -64,7 +64,7 @@ arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
     for (uint64_t i = 0; i < n; i++) {
         vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
     }
-    return X.t() * (vecP - y) / n + epsilon * beta;
+    return X.t() * (vecP - y) / n + lambda * beta;
 }
 
 arma::mat NewtonLogistic::getHessian(const arma::vec &beta) {
@@ -76,7 +76,7 @@ arma::mat NewtonLogistic::getHessian(const arma::vec &beta) {
         doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
         W(i, i) = doubleP * (1 - doubleP);
     }
-    return X.t() * W * X / n + epsilon * arma::eye<arma::mat>(p, p);
+    return X.t() * W * X / n + lambda * arma::eye<arma::mat>(p, p);
 }
 
 arma::vec NewtonLogistic::solve() {
@@ -88,7 +88,7 @@ arma::vec NewtonLogistic::solve() {
     while (k < maxIter) {
         d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
-        if (std::sqrt(sum(arma::square(d_beta))) < sigma) {
+        if (std::sqrt(sum(arma::square(d_beta))) < thresh) {
             break;
         }
         k++;
@@ -103,7 +103,7 @@ arma::vec NewtonPoisson::getGradient(const arma::vec &beta) {
     for (uint64_t i = 0; i < n; i++) {
         vecV[i] = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    return X.t() * (vecV - y) / n + epsilon * beta;
+    return X.t() * (vecV - y) / n + lambda * beta;
 }
 
 arma::mat NewtonPoisson::getHessian(const arma::vec &beta) {
@@ -113,7 +113,7 @@ arma::mat NewtonPoisson::getHessian(const arma::vec &beta) {
     for (uint64_t i = 0; i < n; i++) {
         W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    return X.t() * W * X / n + epsilon * arma::eye<arma::mat>(p, p);
+    return X.t() * W * X / n + lambda * arma::eye<arma::mat>(p, p);
 }
 
 arma::vec NewtonPoisson::solve() {
@@ -125,7 +125,7 @@ arma::vec NewtonPoisson::solve() {
     while (k < maxIter) {
         d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
-        if ( std::sqrt(arma::as_scalar(d_beta.t() * d_beta)) < sigma) {
+        if ( std::sqrt(arma::as_scalar(d_beta.t() * d_beta)) < thresh) {
             break;
         }
         k++;
@@ -138,5 +138,5 @@ arma::vec NewtonGaussian::solve() {
         Rcpp::stop("The input matrix and response vector shouldn't be empty!");
     }
     uint64_t n = X.n_rows, p = X.n_cols;
-    return (X.t() * X / n + epsilon * arma::eye<arma::mat>(p, p)).i() * X.t() * (y - o) / n;
+    return (X.t() * X / n + lambda * arma::eye<arma::mat>(p, p)).i() * X.t() * (y - o) / n;
 }

@@ -48,7 +48,7 @@ List testADMM(const arma::mat& X, const arma::vec& y, const std::string method =
 // [[Rcpp::export]]
 List testNewton(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     NewtonSolver newtonSolver(X, y);
-    newtonSolver.setEpsilon(lambda);
+    newtonSolver.setLambda(lambda);
     arma::vec result = newtonSolver.fit(method);
     return List::create(Named("Result") = result);
 }

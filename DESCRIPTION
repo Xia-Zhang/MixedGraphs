@@ -10,5 +10,5 @@ License: GPL-2
 Imports: Rcpp (>= 0.12.9), RcppParallel
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 RoxygenNote: 6.0.1
-Suggests: testthat, glmnet
+Suggests: testthat, glmnet, RcppParallel
 SystemRequirements: GNU make

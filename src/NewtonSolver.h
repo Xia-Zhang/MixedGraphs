@@ -8,32 +8,32 @@ protected:
     arma::mat X;
     arma::vec y;
     arma::vec o;
-    double epsilon;
+    double lambda;
     uint64_t maxIter;
-    double sigma;  // The convergence threshhold
+    double thresh;  // The convergence threshhold
 public:
     NewtonSolver(){};
     NewtonSolver(const arma::mat &X,
                  const arma::vec &y,
                  const arma::vec &o = arma::vec(),
-                 double epsilon = 0.25,
+                 double lambda = 0.25,
                  uint64_t maxIter = 1e5,
-                 double sigma = 1e-5);
+                 double thresh = 1e-5);
     void setSolver(const arma::mat &X,
                    const arma::vec &y,
                    const arma::vec &o = arma::vec(),
-                   double epsilon = 0.25,
+                   double lambda = 0.25,
                    uint64_t maxIter = 1e5,
-                   double sigma = 1e-5);
+                   double thresh = 1e-5);
     arma::vec fit(std::string method);
     virtual arma::vec solve(){};
     arma::vec solve(const arma::mat &X,
                     const arma::vec &y,
                     const arma::vec &o = arma::vec(),
-                    double epsilon = 0.25,
+                    double lambda = 0.25,
                     uint64_t maxIter = 1e5,
-                    double sigma = 1e-5);
-    void setEpsilon(const double epsilon = 0.25);
+                    double thresh = 1e-5);
+    void setLambda(const double lambda = 0.25);
     virtual ~NewtonSolver(){};
 };
 
