@@ -1,11 +1,9 @@
 context("Test Newton Solver")
 library("glmnet")
 
-norm_vec <- function(x) sqrt(sum(x^2))
-
-compare_diff <- function(x1, x2, epsilon = 0.5) {
-    diff <- norm_vec(x1 - x2)
-    diff <= epsilon * sqrt(length(x1))
+compare_diff <- function(x1, x2, thresh = 0.5) {
+    diff <- sqrt(sum((x1 - x2)^2))
+    diff <= thresh * sqrt(length(x1))
 }
 
 test_that("Compare Newton Logistic solver with glmnet.", {

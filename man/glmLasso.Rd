@@ -4,7 +4,7 @@
 \alias{glmLasso}
 \title{Test function for ADMM Solver}
 \usage{
-glmLasso(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = 5,
+glmLasso(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL,
   thresh = NULL, max.iter = 1e+06, threads = NULL)
 }
 \arguments{
