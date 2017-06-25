@@ -2,7 +2,7 @@
 % Please edit documentation in R/Solver.R
 \name{glmLasso}
 \alias{glmLasso}
-\title{Test function for ADMM Solver}
+\title{glmLasso is used to fit models with lasso penalty.}
 \usage{
 glmLasso(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL,
   thresh = NULL, max.iter = 1e+06, threads = NULL)
@@ -30,7 +30,7 @@ glmLasso(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL,
 the coefficients vector
 }
 \description{
-Test function for ADMM Solver
+glmLasso is used to fit models with lasso penalty.
 }
 \examples{
 X <- matrix(rnorm(500), ncol = 10)

@@ -140,3 +140,10 @@ arma::vec NewtonGaussian::solve() {
     uint64_t n = X.n_rows, p = X.n_cols;
     return (X.t() * X / n + lambda * arma::eye<arma::mat>(p, p)).i() * X.t() * (y - o) / n;
 }
+
+// [[Rcpp::export]]
+Rcpp::List glmRidge(const arma::mat& X, const arma::vec& y, const arma::vec& o, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter) {
+    NewtonSolver newton(X, y, o, lambda, maxIter, thresh);
+    arma::vec coef = newton.fit(family);
+    return Rcpp::List::create(Rcpp::Named("Coef") = coef);
+}

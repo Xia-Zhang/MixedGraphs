@@ -11,7 +11,7 @@ test_that("Compare Newton Logistic solver with glmnet.", {
     y <- rbinom(50, 1, 0.6)
 
     result_glmnet <- coef(glmnet(X, y, family = "binomial", alpha = 0), s = 0.5)
-    result_ADMM <- testNewton(cbind(1, X), y, "logistic", 0.5) $ Result
+    result_ADMM <- glmRidge(X, y, family = "binomial", lambda = 0.5) $ Coef
     expect_true(compare_diff(result_glmnet, result_ADMM))
 })
 
@@ -20,7 +20,7 @@ test_that("Compare Newton Poisson solver with glmnet.", {
     y <- rpois(50, 3)
 
     result_glmnet <- coef(glmnet(X, y, family = "poisson", alpha = 0), s = 0.5)
-    result_ADMM <- testNewton(cbind(1, X), y, "poisson", 0.5) $ Result
+    result_ADMM <- glmRidge(X, y, family = "poisson", lambda = 0.5) $ Coef
     expect_true(compare_diff(result_glmnet, result_ADMM))
 })
 
@@ -29,7 +29,7 @@ test_that("Compare Newton Gaussian solver with glmnet.", {
     y <- rnorm(50)
 
     result_glmnet <- coef(glmnet(X, y, family = "gaussian", alpha = 0), s = 0.5)
-    result_ADMM <- testNewton(cbind(1, X), y, "Gaussian", 0.5) $ Result
+    result_ADMM <- glmRidge(X, y, family = "gaussian", lambda = 0.5) $ Coef
     expect_true(compare_diff(result_glmnet, result_ADMM))
 })
 
@@ -38,7 +38,7 @@ test_that("Compare Newton Logistic solver with glm.", {
     y <- rbinom(50, 1, 0.6)
 
     result_glm <- coef(glm(y ~ X, family = "binomial"))
-    result_ADMM <- testNewton(cbind(1, X), y, "logistic", 0.0) $ Result
+    result_ADMM <- glmRidge(X, y, family = "binomial", lambda = 0.0) $ Coef
     expect_true(compare_diff(result_glm, result_ADMM, 1e-6))
 })
 
@@ -47,7 +47,7 @@ test_that("Compare Newton Poisson solver with glm.", {
     y <- rpois(50, 3)
 
     result_glm <- coef(glm(y ~ X, family = "poisson"))
-    result_ADMM <- testNewton(cbind(1, X), y, "poisson", 0.0) $ Result
+    result_ADMM <- glmRidge(X, y, family = "poisson", lambda = 0.0) $ Coef
     expect_true(compare_diff(result_glm, result_ADMM, 1e-6))
 })
 
@@ -56,6 +56,6 @@ test_that("Compare Newton Gaussian solver with glm.", {
     y <- rnorm(50)
 
     result_glm <- coef(glm(y ~ X, family = "gaussian"))
-    result_ADMM <- testNewton(cbind(1, X), y, "gaussian", 0.0) $ Result
+    result_ADMM <- glmRidge(X, y, family = "gaussian", lambda = 0.0) $ Coef
     expect_true(compare_diff(result_glm, result_ADMM, 1e-6))
 })

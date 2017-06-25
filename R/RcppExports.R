@@ -5,6 +5,10 @@ glmLasso <- function(X, y, o, lambda, family, KLB, thresh, maxIter, threads) {
     .Call('MixedGraphs_glmLasso', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, maxIter, threads)
 }
 
+glmRidge <- function(X, y, o, lambda, family, thresh, maxIter) {
+    .Call('MixedGraphs_glmRidge', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, thresh, maxIter)
+}
+
 test <- function(X, y, method = "Gaussian", lambda = 0.5) {
     .Call('MixedGraphs_test', PACKAGE = 'MixedGraphs', X, y, method, lambda)
 }

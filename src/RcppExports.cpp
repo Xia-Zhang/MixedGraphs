@@ -25,6 +25,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// glmRidge
+Rcpp::List glmRidge(const arma::mat& X, const arma::vec& y, const arma::vec& o, const double& lambda, const std::string family, const double thresh, const uint64_t maxIter);
+RcppExport SEXP MixedGraphs_glmRidge(SEXP XSEXP, SEXP ySEXP, SEXP oSEXP, SEXP lambdaSEXP, SEXP familySEXP, SEXP threshSEXP, SEXP maxIterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type o(oSEXP);
+    Rcpp::traits::input_parameter< const double& >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type family(familySEXP);
+    Rcpp::traits::input_parameter< const double >::type thresh(threshSEXP);
+    Rcpp::traits::input_parameter< const uint64_t >::type maxIter(maxIterSEXP);
+    rcpp_result_gen = Rcpp::wrap(glmRidge(X, y, o, lambda, family, thresh, maxIter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // test
 List test(const arma::mat& X, const arma::vec& y, const std::string method, const double lambda);
 RcppExport SEXP MixedGraphs_test(SEXP XSEXP, SEXP ySEXP, SEXP methodSEXP, SEXP lambdaSEXP) {
@@ -80,6 +97,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"MixedGraphs_glmLasso", (DL_FUNC) &MixedGraphs_glmLasso, 9},
+    {"MixedGraphs_glmRidge", (DL_FUNC) &MixedGraphs_glmRidge, 7},
     {"MixedGraphs_test", (DL_FUNC) &MixedGraphs_test, 4},
     {"MixedGraphs_testADMM", (DL_FUNC) &MixedGraphs_testADMM, 4},
     {"MixedGraphs_testNewton", (DL_FUNC) &MixedGraphs_testNewton, 4},

@@ -1,4 +1,4 @@
-#' Test function for ADMM Solver
+#' glmLasso is used to fit models with lasso penalty.
 #'
 #' @param X is a n*p input matrix.
 #' @param y is the response vector (n elements).
@@ -45,4 +45,38 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL
 		stop("The input of threads is improper.")
 	}
 	.Call('MixedGraphs_glmLasso', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, max.iter, threads)
+}
+
+
+#' glmRidge is used to fit models with ridge penalty.
+#'
+#' @param X is a n*p input matrix.
+#' @param y is the response vector (n elements).
+#' @param o is the offset vector (n elements).
+#' @param lambda is a single value of ridge penalty.
+#' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
+#' @param thresh indicates when to stop the solver. glmRidge will check the Euclidean norm of the change.
+#' @param max.iter is the maximum number of iterations to be performed for the optimization.
+#'
+#' @return the coefficients vector
+#'
+#' @examples
+#' X <- matrix(rnorm(500), ncol = 10)
+#' y <- rbinom(50, 1, 0.6)
+#' o <- rnorm(50)
+#'
+#' glmRidge(X, y, o, lambda = 0.5, family = "logistic", thresh = 0.005, max.iter = 1e5)
+#'
+
+glmRidge <- function(X, y, o = NULL, lambda = 1, family = "gaussian", thresh = 1e-3, max.iter = 1e6) {
+	X <- cbind(1, X)
+	n <- nrow(X)
+	p <- ncol(X)
+	if (is.null(o)) o <- rep(0, n)
+	if (family == "binomial")
+		family <- "logistic"
+	else if (is.element(family, c('gaussian', 'logistic', 'poisson')) == FALSE)
+		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
+
+	.Call('MixedGraphs_glmRidge', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, thresh, max.iter)
 }

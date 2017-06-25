@@ -68,4 +68,6 @@ public:
     ~ADMMGaussian(){};
     
 };
+
+Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const double thresh, const uint64_t maxIter);
 #endif
