@@ -81,7 +81,7 @@ BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, cores = NULL, l
             }
             support_indexes <- which(rowSums(sign(betak_samples))/B >= tau)
             betak_support <- beta[[k]][support_indexes]
-            multi_tmp <-mapply(function(x, y) {as.matrix(x[, support_indexes]) %*% as.vector(y[support_indexes])}, sample_X, beta)
+            multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
             sub_beta <- glmRidge(X[[k]][,support_indexes], y, o = o, family = family, lambda = ridge.lambda, max.iter = ridge.max.iter, thresh = ridge.thresh)$Coef[-1]
             beta[[k]] <- rep(0, length(beta[[k]]))

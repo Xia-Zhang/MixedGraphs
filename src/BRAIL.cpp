@@ -116,7 +116,7 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
                 if (l == k) {
                     continue;
                 }
-                sub_o  += X[l].cols(supportIndex) * beta[l].elem(supportIndex);
+                sub_o  += X[l] * beta[l];
             }
             mat cbind_tmp = mat(n, 1, fill::ones);
             NewtonSolver newton(join_rows(cbind_tmp, sub_X), y, sub_o);
