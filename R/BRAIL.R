@@ -24,33 +24,26 @@ check_stop_criteria <- function(pre_beta, beta) {
     all(result == TRUE)
 }
 
-#' BRAIL is Block-RAndomized Adaptive Iterative Lasso
+#' BRAIL is Block-Randomized Adaptive Iterative Lasso
 #'
-#' @param X is a list containing n matrices, each of the matrices has n rows. They are the ‘blocks’.
+#' @param X is a list containing k matrices, each of the matrices has n rows. They are the 'blocks'.
 #' @param y is the response vector of length n.
 #' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
 #' @param tau is the stability cut-off, which is used for choosing the support features in each block.
 #' @param B is the number of bootstraps in each iteration.
-#' @param cores is the number of cores used to parallellize the bootstrap computation. The default value is the detected core numbers using “detectCores()” in parallel package.
-#' @param threads is the number of threads used for paralleling the ADMM process, the default value would be the available cores on a machine. 
-#' @param lasso.KLB is the maximum iteration number which the support set unchanged in glmLasso
-#' @param lasso.thresh is the precision when the solver to stop optimizing in glmLasso
-#' @param lasso.max.iter is the maximum number of iterations to be performed for the optimization in glmLasso
-#' @param ridge.lambda is a single value of ridge penalty in glmRidge
-#' @param ridge.max.iter is the maximum number of iterations to be performed for the optimization in glmRidge
-#' @param ridge.thresh is the indicates when to stop the solver in glmRidge
+#' @param lasso.control is a list of glmLasso related arguments, like KLB, thresh and max.iter.
+#' @param ridge.control is a list of ridgeLasso related arguments, like lambda, max.iter and thresh.
 #'
-#' @return a list containing n vectors, each of the vectors is the coefficients of corresponding bloc
+#' @return a list containing n vectors. Each element of the list will be a vector of length p_k, where p_k is the number of columns in the k-th block.
 #'
 #' @examples
 #' X1 <- matrix(rnorm(500), ncol = 10)
 #' X2 <- matrix(rnorm(500), ncol = 10)
 #' y <- rbinom(50, 1, 0.6)
 #' X <- list(X1, X2)
-#' BRAIL(X, y, family = “logistic”, tau = 0.8, B = 300, cores = 4, lasso.KLB = 10, lasso.max.iter = 1e6, lasso.thresh = 0.005, ridge.lambda = 1, ridge.max.iter = 1e4, ridge.thresh = 0.001)
+#' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, lasso.control= list(KLB = 10, max.iter = 1e6, thresh = 0.005), ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
 
-
-BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, cores = NULL, lasso.KLB = NULL, lasso.max.iter = 1e8, lasso.thresh = NULL, ridge.lambda = 0.25, ridge.max.iter = 1e8, ridge.thresh  = 1e-5) {
+BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, lasso.control = list(), ridge.control = list()) {
     beta <- lapply(X, function(x){rep(0, ncol(x))})
     K <- length(X)
     n <- length(y)
@@ -58,9 +51,6 @@ BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, cores = NULL, l
     if (family == "binomial")
         family <- "logistic"
 
-    library(doParallel)
-    cl <- makeCluster(1)
-    registerDoParallel(cl)
     while (TRUE) {
         pre_beta <- beta
         for (k in 1 : K) {
@@ -70,20 +60,22 @@ BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, cores = NULL, l
             tmp_lambda <- c / n * norm(as.matrix(beta[[k]]), "2") * sqrt(log(pk) * beta_norm0)
             lambda <- sapply(beta[[k]], function(x){if(x!=0) {tmp_lambda} else {2*tmp_lambda}})
             betak_samples <- 
-            foreach(b = 1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %do% {
+            foreach::foreach(b = 1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %dopar% {
                 indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
                 sample_X <- lapply(X, function(x){x[indexes,]})
                 sample_y <- y[indexes]
                 multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
                 o <- rowSums(as.matrix(multi_tmp[, -k]))
                 w <- lambda * runif(pk, 0.5, 1.5)
-                glmLasso(sample_X[[k]], sample_y, o = o, family = family, lambda = w, KLB = lasso.KLB, max.iter = lasso.max.iter, thresh = lasso.thresh)$Coef[-1]
+                lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w)
+                do.call(glmLasso, c(lasso_argv, lasso.control))$Coef[-1]
             }
             support_indexes <- which(rowSums(sign(betak_samples))/B >= tau)
             betak_support <- beta[[k]][support_indexes]
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
-            sub_beta <- glmRidge(X[[k]][,support_indexes], y, o = o, family = family, lambda = ridge.lambda, max.iter = ridge.max.iter, thresh = ridge.thresh)$Coef[-1]
+            ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, family = family)
+            sub_beta <- do.call(glmRidge, c(ridge_argv, ridge.control))$Coef[-1]
             beta[[k]] <- rep(0, length(beta[[k]]))
             mapply(function(index, value){beta[[k]][index] <<- value}, support_indexes, sub_beta)
         }
@@ -91,6 +83,5 @@ BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, cores = NULL, l
             break
         }
     }
-    stopCluster(cl)
     return(beta)
 }

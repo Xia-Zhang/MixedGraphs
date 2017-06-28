@@ -85,12 +85,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // testBRAIL
-List testBRAIL();
-RcppExport SEXP MixedGraphs_testBRAIL() {
+List testBRAIL(const List& X, const arma::vec& y, const std::string method);
+RcppExport SEXP MixedGraphs_testBRAIL(SEXP XSEXP, SEXP ySEXP, SEXP methodSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(testBRAIL());
+    Rcpp::traits::input_parameter< const List& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const std::string >::type method(methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(testBRAIL(X, y, method));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -101,7 +104,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"MixedGraphs_test", (DL_FUNC) &MixedGraphs_test, 4},
     {"MixedGraphs_testADMM", (DL_FUNC) &MixedGraphs_testADMM, 4},
     {"MixedGraphs_testNewton", (DL_FUNC) &MixedGraphs_testNewton, 4},
-    {"MixedGraphs_testBRAIL", (DL_FUNC) &MixedGraphs_testBRAIL, 0},
+    {"MixedGraphs_testBRAIL", (DL_FUNC) &MixedGraphs_testBRAIL, 3},
     {NULL, NULL, 0}
 };
 

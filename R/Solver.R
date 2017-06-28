@@ -17,7 +17,7 @@
 #' y <- rbinom(50, 1, 0.6)
 #' o <- rnorm(50)
 #' lambda <- c(1:10)/10
-#' glmLasso(X, y, o, lambda, family = "logistic", KLB = 10, thresh = 0.5, max.iter = 1e7, threads = 4)
+#' glmLasso(X, y, o, lambda, family = "binomial", KLB = 10, thresh = 0.5, max.iter = 1e7, threads = 4)
 #'
 
 glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL, thresh = NULL, max.iter = 1e8, threads = NULL) {
@@ -34,17 +34,7 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL
 		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
 	if (is.null(KLB)) KLB <- 0
 	if (is.null(thresh)) thresh <- 0.0
-	library(RcppParallel)
-	if (is.null(threads)) {
-		threads <-  RcppParallel::defaultNumThreads()
-	}
-	else if (is.numeric(threads) && is.atomic(threads) && threads > 0) {
-		RcppParallel::setThreadOptions(numThreads = threads)	
-	}
-	else {
-		stop("The input of threads is improper.")
-	}
-	.Call('MixedGraphs_glmLasso', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, max.iter, threads)
+	.Call('MixedGraphs_glmLasso', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, max.iter, 1)
 }
 
 
@@ -65,10 +55,10 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL
 #' y <- rbinom(50, 1, 0.6)
 #' o <- rnorm(50)
 #'
-#' glmRidge(X, y, o, lambda = 0.5, family = "logistic", thresh = 0.005, max.iter = 1e5)
+#' glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5)
 #'
 
-glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = "gaussian", thresh = 1e-5, max.iter = 1e8) {
+glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = "gaussian", thresh = 1e-8, max.iter = 1e8) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)

@@ -120,7 +120,7 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
             }
             mat cbind_tmp = mat(n, 1, fill::ones);
             NewtonSolver newton(join_rows(cbind_tmp, sub_X), y, sub_o);
-            vec sub_beta = newton.fit(family).subvec(1, supportIndex.size());
+            vec sub_beta = supportIndex.size() >= 1 ? newton.fit(family).subvec(1, supportIndex.size()) : vec();
             beta[k].zeros();
             uint64_t beta_i = 0;
 

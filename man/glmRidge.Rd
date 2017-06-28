@@ -4,8 +4,8 @@
 \alias{glmRidge}
 \title{glmRidge is used to fit models with ridge penalty.}
 \usage{
-glmRidge(X, y, o = NULL, lambda = 1, family = "gaussian",
-  thresh = 0.001, max.iter = 1e+06)
+glmRidge(X, y, o = NULL, lambda = 0.25, family = "gaussian",
+  thresh = 1e-08, max.iter = 1e+08)
 }
 \arguments{
 \item{X}{is a n*p input matrix.}
@@ -33,6 +33,6 @@ X <- matrix(rnorm(500), ncol = 10)
 y <- rbinom(50, 1, 0.6)
 o <- rnorm(50)
 
-glmRidge(X, y, o, lambda = 0.5, family = "logistic", thresh = 0.005, max.iter = 1e5)
+glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5)
 
 }

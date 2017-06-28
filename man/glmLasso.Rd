@@ -5,7 +5,7 @@
 \title{glmLasso is used to fit models with lasso penalty.}
 \usage{
 glmLasso(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL,
-  thresh = NULL, max.iter = 1e+06, threads = NULL)
+  thresh = NULL, max.iter = 1e+08, threads = NULL)
 }
 \arguments{
 \item{X}{is a n*p input matrix.}
@@ -37,6 +37,6 @@ X <- matrix(rnorm(500), ncol = 10)
 y <- rbinom(50, 1, 0.6)
 o <- rnorm(50)
 lambda <- c(1:10)/10
-glmLasso(X, y, o, lambda, family = "logistic", KLB = 10, thresh = 0.5, max.iter = 1e7, threads = 4)
+glmLasso(X, y, o, lambda, family = "binomial", KLB = 10, thresh = 0.5, max.iter = 1e7, threads = 4)
 
 }
