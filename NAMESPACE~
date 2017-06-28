@@ -1,5 +1,0 @@
-useDynLib(MixedGraphs)
-importFrom(Rcpp, evalCpp)
-importFrom(RcppParallel, RcppParallelLibs)
-
-export("test", "testNewton", "glmLasso")

@@ -17,13 +17,13 @@ public:
                  const arma::vec &y,
                  const arma::vec &o = arma::vec(),
                  double lambda = 0.25,
-                 uint64_t maxIter = 1e5,
+                 uint64_t maxIter = 1e8,
                  double thresh = 1e-5);
     void setSolver(const arma::mat &X,
                    const arma::vec &y,
                    const arma::vec &o = arma::vec(),
                    double lambda = 0.25,
-                   uint64_t maxIter = 1e5,
+                   uint64_t maxIter = 1e8,
                    double thresh = 1e-5);
     arma::vec fit(std::string method);
     virtual arma::vec solve(){};
@@ -31,7 +31,7 @@ public:
                     const arma::vec &y,
                     const arma::vec &o = arma::vec(),
                     double lambda = 0.25,
-                    uint64_t maxIter = 1e5,
+                    uint64_t maxIter = 1e8,
                     double thresh = 1e-5);
     void setLambda(const double lambda = 0.25);
     virtual ~NewtonSolver(){};

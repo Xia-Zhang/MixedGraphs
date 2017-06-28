@@ -23,8 +23,8 @@ field<vec> initializaBeta(const field<mat> &X) {
 
 double getC(const mat &X, const vec &beta, std::string &method) {
     std::string lowerMethod(method);
-    uint64_t n = X.n_rows, p = X.n_cols;
-    mat W(p, p);
+    uint64_t n = X.n_rows;
+    mat W(n, n);
 
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
     if (lowerMethod == "gaussian") {
@@ -104,22 +104,26 @@ field<vec> BRAIL(field<mat> &X, const vec &y, std::string family, double tau, ui
                     o += sample_X[l] * beta[l];
                 }
                 w = uniformRandom(p) % lambda;
-                ADMM admm(sample_X[k], sample_y, o, w);
-                betaK_mat.row(b) = admm.fit(family).t();
+                mat cbind_tmp = mat(n, 1, fill::ones);
+                ADMM admm(join_rows(cbind_tmp, sample_X[k]), sample_y, o, w);
+                rowvec fit_result = admm.fit(family).t();
+                betaK_mat.row(b) = fit_result.subvec(1, p);
             }
-            umat supportIndex = (sum(sign(betaK_mat))/ static_cast<double> (B) >= tau);
-            mat sub_X = X[k].rows(supportIndex);
+            uvec supportIndex = find(sum(sign(betaK_mat))/ static_cast<double> (B) >= tau);
+            mat sub_X = X[k].cols(supportIndex);
             vec sub_o(n, fill::zeros);
             for (uint64_t l = 0; l < K; l++) {
                 if (l == k) {
                     continue;
                 }
-                sub_o  += X[l].rows(supportIndex) * beta[l].elem(supportIndex);
+                sub_o  += X[l].cols(supportIndex) * beta[l].elem(supportIndex);
             }
-            NewtonSolver newton(sub_X, y, sub_o);
-            vec sub_beta = newton.fit(family);
+            mat cbind_tmp = mat(n, 1, fill::ones);
+            NewtonSolver newton(join_rows(cbind_tmp, sub_X), y, sub_o);
+            vec sub_beta = newton.fit(family).subvec(1, supportIndex.size());
             beta[k].zeros();
             uint64_t beta_i = 0;
+
             for (uint64_t index : supportIndex) {
                 beta[k][index] = sub_beta[beta_i++];
             }

@@ -20,7 +20,7 @@
 #' glmLasso(X, y, o, lambda, family = "logistic", KLB = 10, thresh = 0.5, max.iter = 1e7, threads = 4)
 #'
 
-glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL, thresh = NULL, max.iter = 1e6, threads = NULL) {
+glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL, thresh = NULL, max.iter = 1e8, threads = NULL) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)
@@ -68,7 +68,7 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL
 #' glmRidge(X, y, o, lambda = 0.5, family = "logistic", thresh = 0.005, max.iter = 1e5)
 #'
 
-glmRidge <- function(X, y, o = NULL, lambda = 1, family = "gaussian", thresh = 1e-3, max.iter = 1e6) {
+glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = "gaussian", thresh = 1e-5, max.iter = 1e8) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)

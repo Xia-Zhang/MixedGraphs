@@ -54,16 +54,17 @@ List testNewton(const arma::mat& X, const arma::vec& y, const std::string method
 }
 
 // [[Rcpp::export]]
-List testBRAIL() {
-    arma::mat i_mat(5, 5);
-    i_mat.fill(1.1);
-    List X = List::create(i_mat, i_mat);
-    arma::vec y(5);
-    y.fill(2.1);
+List testBRAIL(const List& X, const arma::vec& y, const std::string method = "gaussian") {
+    //arma::mat i_mat(5, 5);
+    //i_mat.fill(1.1);
+    //List X = List::create(i_mat, i_mat);
+    //arma::vec y(5);
+    //y.fill(2.1);
     arma::field<arma::mat> test_X(X.size());
     for (uint64_t i = 0; i < X.size(); i++) {
         test_X[i] = as<arma::mat>(X[i]);
     }
-    BRAIL(test_X, y, "poisson");
-    return X;
+    arma::field<arma::vec> test = BRAIL(test_X, y, method);
+    return List::create(Named("1") = test[0], Named("2") = test[1]);
+    //return X;
 }
