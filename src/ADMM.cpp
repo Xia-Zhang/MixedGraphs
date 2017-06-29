@@ -213,7 +213,7 @@ bool ADMM::stopCriteria() {
     else {
         uint64_t tmpKLB = 5;
         bool remainSame = arma::all(sign(preZ) == sign(z));
-        if (!KLB) {
+        if (KLB) {
             tmpKLB = KLB;
         }
         if (remainSame) {

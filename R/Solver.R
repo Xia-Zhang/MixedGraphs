@@ -32,8 +32,18 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL
 		family <- "logistic"
 	else if (is.element(family, c('gaussian', 'logistic', 'poisson')) == FALSE) 
 		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
-	if (is.null(KLB)) KLB <- 0
-	if (is.null(thresh)) thresh <- 0.0
+	if (is.null(KLB)) {
+		KLB <- 0
+	}
+	else if (is.numeric(KLB) == FALSE || KLB <= 0) {
+		stop("Invailid input KLB!")
+	}
+	if (is.null(thresh)) {
+		thresh <- 0.0
+	}
+	else if (is.numeric(thresh) == FALSE || thresh <= 0) {
+		stop("Invailid input thresh!")
+	}
 	.Call('MixedGraphs_glmLasso', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, max.iter, 1)
 }
 
