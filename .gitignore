@@ -11,3 +11,6 @@ glmPR.Rcheck
 test
 /glmPR/src/.Rhistory
 .Rhistory
+!/man/MixedGraphs-package.Rd
+/man/*
+RcppExports.*
