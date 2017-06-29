@@ -61,7 +61,7 @@ List testBRAIL(const List& X, const arma::vec& y, const std::string method = "ga
     //arma::vec y(5);
     //y.fill(2.1);
     arma::field<arma::mat> test_X(X.size());
-    for (uint64_t i = 0; i < X.size(); i++) {
+    for (uint64_t i = 0; i < (unsigned)X.size(); i++) {
         test_X[i] = as<arma::mat>(X[i]);
     }
     arma::field<arma::vec> test = BRAIL(test_X, y, method);

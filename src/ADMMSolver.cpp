@@ -23,7 +23,7 @@ void ADMMSolver::updateU(const arma::vec &z) {
 }
 
 arma::vec ADMMLogistic::getGradient(const arma::vec &z) {
-    uint64_t n = X.n_rows, p = X.n_cols;
+    uint64_t n = X.n_rows;
     arma::vec vecP(n);
     for (uint64_t i = 0; i < n; i++) {
         vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
@@ -48,7 +48,7 @@ void ADMMLogistic::updateBeta(const arma::vec &z) {
 }
 
 arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
-    uint64_t n = X.n_rows, p = X.n_cols;
+    uint64_t n = X.n_rows;
     arma::vec vecV(n);
 
     for (uint64_t i = 0; i < n; i++) {

@@ -26,7 +26,7 @@ void NewtonSolver::setSolver(const arma::mat &X,
 }
 
 arma::vec NewtonSolver::fit(std::string method) {
-    NewtonSolver * solver;
+    NewtonSolver * solver = NULL;
     std::string lowerMethod(method);
 
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
@@ -59,7 +59,7 @@ void NewtonSolver::setLambda(const double lambda) {
 }
 
 arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
-    uint64_t n = X.n_rows, p = X.n_cols;
+    uint64_t n = X.n_rows;
     arma::vec vecP(n);
     for (uint64_t i = 0; i < n; i++) {
         vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
@@ -97,7 +97,7 @@ arma::vec NewtonLogistic::solve() {
 }
 
 arma::vec NewtonPoisson::getGradient(const arma::vec &beta) {
-    uint64_t n = X.n_rows, p = X.n_cols;
+    uint64_t n = X.n_rows;
     arma::vec vecV(n);
 
     for (uint64_t i = 0; i < n; i++) {

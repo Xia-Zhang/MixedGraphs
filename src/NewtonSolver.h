@@ -26,7 +26,7 @@ public:
                    uint64_t maxIter = 1e8,
                    double thresh = 1e-8);
     arma::vec fit(std::string method);
-    virtual arma::vec solve(){};
+    virtual arma::vec solve() {return arma::vec();};
     arma::vec solve(const arma::mat &X,
                     const arma::vec &y,
                     const arma::vec &o = arma::vec(),

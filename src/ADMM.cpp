@@ -60,7 +60,7 @@ void ADMM::clear() {
 }
 
 arma::vec ADMM::fit(const std::string method) {
-    uint64_t k = 1, p = X.n_cols, n = X.n_rows;
+    uint64_t k = 1, p = X.n_cols;
     std::vector<ADMMSolver *> solvers(threadNum);
     std::string lowerMethod(method);
     sumUBeta = arma::mat(p, threadNum, arma::fill::zeros);
@@ -173,7 +173,7 @@ struct admmParallel: public Worker {
     const arma::vec &z;
     arma::mat &sum;
     admmParallel(const std::vector<ADMMSolver *> &input, const arma::vec &z, arma::mat &sum) : input(input), z(z), sum(sum){}
-    void operator()(uint64_t begin, uint64_t end) {
+    void operator()(std::size_t begin, std::size_t end) {
         for (uint64_t i = begin; i < end; i++) {
             sum.col(i) = input[i]->solve(z);
         }
@@ -181,7 +181,6 @@ struct admmParallel: public Worker {
 };
 
 arma::vec ADMM::updateUBeta(std::vector<ADMMSolver *> &solvers) {
-    uint64_t p = X.n_cols;
     admmParallel admmP(solvers, z, sumUBeta);
     parallelFor(0, threadNum, admmP);
     return arma::sum(sumUBeta, 1) / threadNum;
@@ -214,7 +213,7 @@ bool ADMM::stopCriteria() {
     else {
         uint64_t tmpKLB = 5;
         bool remainSame = arma::all(sign(preZ) == sign(z));
-        if (KLB) {
+        if (!KLB) {
             tmpKLB = KLB;
         }
         if (remainSame) {
