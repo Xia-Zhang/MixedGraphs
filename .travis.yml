@@ -1,7 +1,4 @@
 language: r
-r:
-  - release
-  - devel
 
 cache: packages
 
@@ -13,8 +10,8 @@ r_packages:
   - Rcpp
 
 before_install:
-  - Rscript -e 'roxygen2::roxygenize()'
   - Rscript -e 'Rcpp::compileAttributes()'
+  - Rscript -e 'install.packages(c("devtools","roxygen2"));devtools::document()'
 
 r_build_args: --no-build-vignettes --no-manual --no-resave-data
 r_check_args: --no-build-vignettes --no-manual
