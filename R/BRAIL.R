@@ -31,7 +31,7 @@ check_stop_criteria <- function(pre_beta, beta) {
 #' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
 #' @param tau is the stability cut-off, which is used for choosing the support features in each block.
 #' @param B is the number of bootstraps in each iteration.
-#' @param lasso.control is a list of glmLasso related arguments, like KLB, thresh and max.iter.
+#' @param lasso.control is a list of glmLasso related arguments, like support_stability, thresh and max.iter.
 #' @param ridge.control is a list of ridgeLasso related arguments, like lambda, max.iter and thresh.
 #'
 #' @return a list containing n vectors. Each element of the list will be a vector of length p_k, where p_k is the number of columns in the k-th block.
@@ -41,7 +41,7 @@ check_stop_criteria <- function(pre_beta, beta) {
 #' X2 <- matrix(rnorm(500), ncol = 10)
 #' y <- rbinom(50, 1, 0.6)
 #' X <- list(X1, X2)
-#' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, lasso.control= list(KLB = 10, max.iter = 1e6, thresh = 0.005), ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
+#' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, lasso.control= list(support_stability = 10, max.iter = 1e6, thresh = 0.005), ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
 
 BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, lasso.control = list(), ridge.control = list()) {
     beta <- lapply(X, function(x){rep(0, ncol(x))})

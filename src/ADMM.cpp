@@ -7,12 +7,12 @@ ADMM::ADMM (const arma::mat &X,
             const arma::vec &o,
             const arma::vec &lambda,
             const double thresh,
-            const uint64_t KLB,
+            const uint64_t support_stability,
             const uint64_t maxIter,
             const arma::vec &betaWS,
             const arma::vec &zWS,
             const arma::vec &uWS) {
-    reset(X, y, o, lambda, thresh, KLB, maxIter, betaWS, zWS, uWS);
+    reset(X, y, o, lambda, thresh, support_stability, maxIter, betaWS, zWS, uWS);
 }
 
 void ADMM::reset(const arma::mat &X,
@@ -20,7 +20,7 @@ void ADMM::reset(const arma::mat &X,
                  const arma::vec &o,
                  const arma::vec &lambda,
                  const double thresh,
-                 const uint64_t KLB,
+                 const uint64_t support_stability,
                  const uint64_t maxIter,
                  const arma::vec &betaWS,
                  const arma::vec &zWS,
@@ -31,7 +31,7 @@ void ADMM::reset(const arma::mat &X,
     setVec(this->o, o, n);
     setWeight(lambda);
     this->thresh = thresh;
-    this->KLB = KLB;
+    this->support_stability = support_stability;
     this->maxIter = maxIter;
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
@@ -51,7 +51,7 @@ void ADMM::clear() {
     z.clear();
     preZ.clear();
     thresh = 0.0;
-    KLB = 0;
+    support_stability = 0;
     maxIter = 0;
 }
 
@@ -127,11 +127,11 @@ void ADMM::setThresh(const double thresh) {
     this->thresh = thresh;
 }
 
-void ADMM::setKLB(uint64_t KLB) {
-    if (KLB < 0) {
-        Rcpp::stop("The KLB should not be negative!");
+void ADMM::setSupportStability(uint64_t support_stability) {
+    if (support_stability < 0) {
+        Rcpp::stop("The support_stability should not be negative!");
     }
-    this->KLB = KLB;
+    this->support_stability = support_stability;
 }
 
 void ADMM::setMaxIterator(uint64_t maxIter) {
@@ -198,14 +198,14 @@ void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
 
 bool ADMM::stopCriteria() {
     bool result = true;
-    if (!KLB && thresh) {
+    if (!support_stability && thresh) {
         result = (std::sqrt(arma::sum(arma::square(z - preZ))) <= thresh);
     }
     else {
-        uint64_t tmpKLB = 5;
+        uint64_t tmpsupport_stability = 5;
         bool remainSame = arma::all(sign(preZ) == sign(z));
-        if (KLB) {
-            tmpKLB = KLB;
+        if (support_stability) {
+            tmpsupport_stability = support_stability;
         }
         if (remainSame) {
             supportIter += 1;
@@ -213,7 +213,7 @@ bool ADMM::stopCriteria() {
         else {
             supportIter = 0;
         }
-        result = (supportIter >= tmpKLB);
+        result = (supportIter >= tmpsupport_stability);
     }
     preZ = z;
     return result;
@@ -229,8 +229,8 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint64_t num
 }
 
 // [[Rcpp::export]]
-Rcpp::List glmLassoCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter) {
-    ADMM admm(X, y, o, lambda, thresh, KLB, maxIter);
+Rcpp::List glmLassoCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t support_stability, const double thresh, const uint64_t maxIter) {
+    ADMM admm(X, y, o, lambda, thresh, support_stability, maxIter);
     arma::vec coef = admm.fit(family);
     return Rcpp::List::create(Rcpp::Named("Coef") = coef); 
 }

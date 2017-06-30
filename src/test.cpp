@@ -22,7 +22,7 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 List test(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     ADMM testADMM(X, y);
-    testADMM.setKLB(8);
+    testADMM.setSupportStability(8);
     testADMM.setWeight(lambda);
     arma::vec result;
     arma::uvec indices;
