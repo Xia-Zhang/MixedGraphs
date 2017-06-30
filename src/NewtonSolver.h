@@ -8,31 +8,35 @@ protected:
     arma::mat X;
     arma::vec y;
     arma::vec o;
+    arma::vec betaWS;
     double lambda;
     uint64_t maxIter;
-    double thresh;  // The convergence threshhold
+    double thresh;
 public:
     NewtonSolver(){};
     NewtonSolver(const arma::mat &X,
                  const arma::vec &y,
                  const arma::vec &o = arma::vec(),
-                 double lambda = 0.25,
-                 uint64_t maxIter = 1e8,
-                 double thresh = 1e-8);
+                 const arma::vec betaWS = arma::vec(),
+                 const double lambda = 0.25,
+                 const uint64_t maxIter = 1e8,
+                 const double thresh = 1e-8);
     void setSolver(const arma::mat &X,
                    const arma::vec &y,
                    const arma::vec &o = arma::vec(),
-                   double lambda = 0.25,
-                   uint64_t maxIter = 1e8,
-                   double thresh = 1e-8);
+                   const arma::vec betaWS = arma::vec(),
+                   const double lambda = 0.25,
+                   const uint64_t maxIter = 1e8,
+                   const double thresh = 1e-8);
     arma::vec fit(std::string method);
     virtual arma::vec solve() {return arma::vec();};
     arma::vec solve(const arma::mat &X,
                     const arma::vec &y,
                     const arma::vec &o = arma::vec(),
-                    double lambda = 0.25,
-                    uint64_t maxIter = 1e8,
-                    double thresh = 1e-8);
+                    const arma::vec betaWS = arma::vec(),
+                    const double lambda = 0.25,
+                    const uint64_t maxIter = 1e8,
+                    const double thresh = 1e-8);
     void setLambda(const double lambda = 0.25);
     virtual ~NewtonSolver(){};
 };
@@ -64,5 +68,5 @@ public:
     ~NewtonGaussian(){};
 };
 
-Rcpp::List glmRidgeCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter);
+Rcpp::List glmRidgeCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec& betaWS, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter);
 #endif

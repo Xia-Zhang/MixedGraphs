@@ -74,7 +74,7 @@ BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, lasso.control =
             betak_support <- beta[[k]][support_indexes]
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
-            ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, family = family)
+            ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, beta.init = pre_beta[[k]][support_indexes], family = family)
             sub_beta <- do.call(glmRidge, c(ridge_argv, ridge.control))$Coef[-1]
             beta[[k]] <- rep(0, length(beta[[k]]))
             mapply(function(index, value){beta[[k]][index] <<- value}, support_indexes, sub_beta)

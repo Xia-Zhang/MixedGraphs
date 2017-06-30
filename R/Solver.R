@@ -52,6 +52,7 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", support_st
 #' @param X is a n*p input matrix.
 #' @param y is the response vector (n elements).
 #' @param o is the offset vector (n elements).
+#' @param beta.init is the vector used to initialize the coefficients vector to speed up the code.
 #' @param lambda is a single value of ridge penalty.
 #' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
 #' @param thresh indicates when to stop the solver. glmRidge will check the Euclidean norm of the change.
@@ -63,19 +64,20 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", support_st
 #' X <- matrix(rnorm(500), ncol = 10)
 #' y <- rbinom(50, 1, 0.6)
 #' o <- rnorm(50)
-#'
-#' glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5)
+#' beta.init <- rep(1, 10)
+#' glmRidge(X, y, o, beta.init, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5)
 #'
 
-glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = "gaussian", thresh = 1e-8, max.iter = 1e8) {
+glmRidge <- function(X, y, o = NULL, beta.init = NULL, lambda = 0.25, family = "gaussian", thresh = 1e-8, max.iter = 1e8) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)
 	if (is.null(o)) o <- rep(0, n)
+	if (is.null(beta.init)) beta.init <- rep(0, p)
+	else if (length(beta.init) == p - 1) beta.init <- append(0, beta.init)
 	if (family == "binomial")
 		family <- "logistic"
 	else if (is.element(family, c('gaussian', 'logistic', 'poisson')) == FALSE)
 		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
-
-	.Call('MixedGraphs_glmRidgeCPP', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, thresh, max.iter)
+	.Call('MixedGraphs_glmRidgeCPP', PACKAGE = 'MixedGraphs', X, y, o, beta.init, lambda, family, thresh, max.iter)
 }

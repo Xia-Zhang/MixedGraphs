@@ -3,23 +3,28 @@
 NewtonSolver::NewtonSolver(const arma::mat &X,
                            const arma::vec &y,
                            const arma::vec &o,
-                           double lambda,
-                           uint64_t maxIter,
-                           double thresh) {
-    setSolver(X, y, o, lambda, maxIter, thresh);
+                           const arma::vec betaWS,
+                           const double lambda,
+                           const uint64_t maxIter,
+                           const double thresh) {
+    setSolver(X, y, o, betaWS, lambda, maxIter, thresh);
 }
 
 void NewtonSolver::setSolver(const arma::mat &X,
-                           const arma::vec &y,
-                           const arma::vec &o,
-                           double lambda,
-                           uint64_t maxIter,
-                           double thresh) {
+                             const arma::vec &y,
+                             const arma::vec &o,
+                             const arma::vec betaWS,
+                             const double lambda,
+                             const uint64_t maxIter,
+                             const double thresh) {
     this->X = X;
     this->y = y;
     if (o.empty())
         this->o = arma::vec(X.n_rows, arma::fill::zeros);
     else this->o = o;
+    if (betaWS.empty())
+        this->betaWS = arma::vec(X.n_cols, arma::fill::zeros);
+    else this->betaWS = betaWS;
     this->lambda = lambda;
     this->maxIter = maxIter;
     this->thresh = thresh;
@@ -40,17 +45,21 @@ arma::vec NewtonSolver::fit(std::string method) {
         solver = new NewtonGaussian();
     }
 
-    solver->setSolver(this->X, this->y, this->o, this->lambda);
-    return solver->solve();
+    solver->setSolver(this->X, this->y, this->o, this->betaWS, this->lambda);
+    arma::vec result = solver->solve();
+
+    delete solver;
+    return result;
 }
 
 arma::vec NewtonSolver::solve(const arma::mat &X,
-                    const arma::vec &y,
-                    const arma::vec &o,
-                    double lambda,
-                    uint64_t maxIter,
-                    double thresh){
-    setSolver(X, y, o, lambda, maxIter, thresh);
+                              const arma::vec &y,
+                              const arma::vec &o,
+                              const arma::vec betaWS,
+                              const double lambda,
+                              const uint64_t maxIter,
+                              const double thresh){
+    setSolver(X, y, o, betaWS, lambda, maxIter, thresh);
     return solve();
 }
 
@@ -84,7 +93,8 @@ arma::vec NewtonLogistic::solve() {
     if (X.empty() || y.empty()) {
         Rcpp::stop("The input matrix and response vector shouldn't be empty!");
     }
-    arma::vec beta(X.n_cols, arma::fill::zeros), d_beta;
+    arma::vec beta, d_beta;
+    beta = betaWS;
     while (k < maxIter) {
         d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
@@ -121,7 +131,8 @@ arma::vec NewtonPoisson::solve() {
     if (X.empty() || y.empty()) {
         Rcpp::stop("The input matrix and response vector shouldn't be empty!");
     }
-    arma::vec beta(X.n_cols, arma::fill::zeros), d_beta;
+    arma::vec beta, d_beta;
+    beta = betaWS;
     while (k < maxIter) {
         d_beta = arma::solve(getHessian(beta), getGradient(beta));
         beta = beta - d_beta;
@@ -142,8 +153,8 @@ arma::vec NewtonGaussian::solve() {
 }
 
 // [[Rcpp::export]]
-Rcpp::List glmRidgeCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter) {
-    NewtonSolver newton(X, y, o, lambda, maxIter, thresh);
+Rcpp::List glmRidgeCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec& betaWS, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter) {
+    NewtonSolver newton(X, y, o, betaWS, lambda, maxIter, thresh);
     arma::vec coef = newton.fit(family);
     return Rcpp::List::create(Rcpp::Named("Coef") = coef);
 }
