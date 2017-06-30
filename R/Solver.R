@@ -8,7 +8,6 @@
 #' @param KLB is the iterations number which the support set unchanged.
 #' @param thresh is the precision when the solver to stop optimizing, when the KLB and thresh are setted at the same time, the solver would stop when any of them is achieved.
 #' @param max.iter is the maximum number of iterations to be performed for the optimization.
-#' @param threads is the number of threads used for paralleling the ADMM process, the default value would be the available cores on a machine. 
 #'
 #' @return the coefficients vector
 #'
@@ -17,10 +16,10 @@
 #' y <- rbinom(50, 1, 0.6)
 #' o <- rnorm(50)
 #' lambda <- c(1:10)/10
-#' glmLasso(X, y, o, lambda, family = "binomial", KLB = 10, thresh = 0.5, max.iter = 1e7, threads = 4)
+#' glmLasso(X, y, o, lambda, family = "binomial", KLB = 10, thresh = 0.5, max.iter = 1e7)
 #'
 
-glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL, thresh = NULL, max.iter = 1e8, threads = NULL) {
+glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL, thresh = NULL, max.iter = 1e8) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)
@@ -44,7 +43,7 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", KLB = NULL
 	else if (is.numeric(thresh) == FALSE || thresh <= 0) {
 		stop("Invailid input thresh!")
 	}
-	.Call('MixedGraphs_glmLasso', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, max.iter, 1)
+	.Call('MixedGraphs_glmLassoCPP', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, KLB, thresh, max.iter)
 }
 
 
@@ -78,5 +77,5 @@ glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = "gaussian", thresh 
 	else if (is.element(family, c('gaussian', 'logistic', 'poisson')) == FALSE)
 		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
 
-	.Call('MixedGraphs_glmRidge', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, thresh, max.iter)
+	.Call('MixedGraphs_glmRidgeCPP', PACKAGE = 'MixedGraphs', X, y, o, lambda, family, thresh, max.iter)
 }

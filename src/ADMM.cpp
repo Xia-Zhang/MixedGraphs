@@ -6,24 +6,22 @@ ADMM::ADMM (const arma::mat &X,
             const arma::vec &y,
             const arma::vec &o,
             const arma::vec &lambda,
-            double thresh,
-            uint64_t KLB,
-            uint64_t maxIter,
-            uint64_t threadNum,
+            const double thresh,
+            const uint64_t KLB,
+            const uint64_t maxIter,
             const arma::vec &betaWS,
             const arma::vec &zWS,
             const arma::vec &uWS) {
-    reset(X, y, o, lambda, thresh, KLB, maxIter, threadNum, betaWS, zWS, uWS);
+    reset(X, y, o, lambda, thresh, KLB, maxIter, betaWS, zWS, uWS);
 }
 
 void ADMM::reset(const arma::mat &X,
                  const arma::vec &y,
                  const arma::vec &o,
                  const arma::vec &lambda,
-                 double thresh,
-                 uint64_t KLB,
-                 uint64_t maxIter,
-                 uint64_t threadNum,
+                 const double thresh,
+                 const uint64_t KLB,
+                 const uint64_t maxIter,
                  const arma::vec &betaWS,
                  const arma::vec &zWS,
                  const arma::vec &uWS) {
@@ -35,7 +33,6 @@ void ADMM::reset(const arma::mat &X,
     this->thresh = thresh;
     this->KLB = KLB;
     this->maxIter = maxIter;
-    this->threadNum = threadNum;
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
     setVec(this->uWS, uWS, p);
@@ -56,14 +53,15 @@ void ADMM::clear() {
     thresh = 0.0;
     KLB = 0;
     maxIter = 0;
-    threadNum = 0;
 }
 
 arma::vec ADMM::fit(const std::string method) {
     uint64_t k = 1, p = X.n_cols;
-    std::vector<ADMMSolver *> solvers(threadNum);
+    // TODO: consensus ADMM partition number
+    uint64_t partitions = 1;
+    std::vector<ADMMSolver *> solvers(partitions);
     std::string lowerMethod(method);
-    sumUBeta = arma::mat(p, threadNum, arma::fill::zeros);
+    sumUBeta = arma::mat(p, partitions, arma::fill::zeros);
     
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
     if (lowerMethod == "logistic") {
@@ -143,19 +141,11 @@ void ADMM::setMaxIterator(uint64_t maxIter) {
     this->maxIter = maxIter;
 }
 
-void ADMM::setThreadNumber(uint64_t number) {
-    if (number <= 0) {
-        Rcpp::stop("The thread number should not be less than 1.");
-    }
-    //RcppParallel::setThreadOptions(numThreads = 4);
-    this->threadNum = number;
-}
-
 template <typename T>
-void ADMM::initializeSolver(std::vector<ADMMSolver *> &solvers) {
+void ADMM::initializeSolver(std::vector<ADMMSolver *> &solvers, const uint64_t partitions) {
     uint64_t n = X.n_rows;
-    double interval = n / static_cast<double>(threadNum);
-    for (uint64_t i = 0; i < threadNum; i++) {
+    double interval = n / static_cast<double>(partitions);
+    for (uint64_t i = 0; i < partitions; i++) {
         uint64_t col0 = i * interval, col1 = (i + 1) * interval - 1;
         arma::mat subX = X.rows(col0, col1);
         solvers[i] = new T(X.rows(col0, col1), y.subvec(col0, col1), o.subvec(col0, col1), betaWS, uWS);
@@ -163,7 +153,7 @@ void ADMM::initializeSolver(std::vector<ADMMSolver *> &solvers) {
 }
 
 void ADMM::deleteSolver(std::vector<ADMMSolver *> &solvers) {
-    for (uint64_t i = 0; i < threadNum; i++) {
+    for (uint64_t i = 0; i < solvers.size(); i++) {
         delete solvers[i];
     }
 }
@@ -181,9 +171,10 @@ struct admmParallel: public Worker {
 };
 
 arma::vec ADMM::updateUBeta(std::vector<ADMMSolver *> &solvers) {
+    uint64_t partitions = 1;
     admmParallel admmP(solvers, z, sumUBeta);
-    parallelFor(0, threadNum, admmP);
-    return arma::sum(sumUBeta, 1) / threadNum;
+    parallelFor(0, partitions, admmP);
+    return arma::sum(sumUBeta, 1) / partitions;
 }
 
 void ADMM::updateZ() {
@@ -238,8 +229,8 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint64_t num
 }
 
 // [[Rcpp::export]]
-Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter, const uint64_t threads) {
-    ADMM admm(X, y, o, lambda, thresh, KLB, maxIter, threads);
+Rcpp::List glmLassoCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter) {
+    ADMM admm(X, y, o, lambda, thresh, KLB, maxIter);
     arma::vec coef = admm.fit(family);
     return Rcpp::List::create(Rcpp::Named("Coef") = coef); 
 }

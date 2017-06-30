@@ -30,7 +30,6 @@ List test(const arma::mat& X, const arma::vec& y, const std::string method = "Ga
     result = testADMM.fit(method);
     Rcout << result.size();
     Rcout << result.elem(indices);
-    //testADMM.setThreadNumber(4);
     //Rcpp::Rcout << testADMM.fit(method);
     return List::create(Named("Result") = result);
 }
@@ -39,7 +38,6 @@ List test(const arma::mat& X, const arma::vec& y, const std::string method = "Ga
 List testADMM(const arma::mat& X, const arma::vec& y, const std::string method = "Gaussian", const double lambda = 0.5) {
     ADMM testADMM(X, y);
     testADMM.setWeight(lambda);
-    testADMM.setThreadNumber(4);
     arma::vec result = testADMM.fit(method);
     return List::create(Named("Result") = result);
 }

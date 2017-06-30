@@ -24,10 +24,9 @@ private:
     uint64_t supportIter;
     uint64_t KLB;
     uint64_t maxIter;
-    uint64_t threadNum;
 
     template <typename T>
-    void initializeSolver(std::vector<ADMMSolver *> &solvers);
+    void initializeSolver(std::vector<ADMMSolver *> &solvers, const uint64_t partitions = 1);
     void deleteSolver(std::vector<ADMMSolver *> &solvers);
     arma::vec updateUBeta(std::vector<ADMMSolver *> &solvers);
     void updateZ();
@@ -40,10 +39,9 @@ public:
          const arma::vec &y,
          const arma::vec &o = arma::vec(),
          const arma::vec &lambda = arma::vec(),
-         double thresh = 0.0,
-         uint64_t KLB = 0,
-         uint64_t maxIter = 1e8,
-         uint64_t threadNum = 1,
+         const double thresh = 0.0,
+         const uint64_t KLB = 0,
+         const uint64_t maxIter = 1e8,
          const arma::vec &betaWS = arma::vec(),
          const arma::vec &zWS = arma::vec(),
          const arma::vec &uWS = arma::vec());
@@ -51,10 +49,9 @@ public:
                const arma::vec &y, 
                const arma::vec &o = arma::vec(),
                const arma::vec &lambda = arma::vec(),
-               double thresh = 0.0,
-               uint64_t KLB = 0,
-               uint64_t maxIter = 1e8,
-               uint64_t threadNum = 1,
+               const double thresh = 0.0,
+               const uint64_t KLB = 0,
+               const uint64_t maxIter = 1e8,
                const arma::vec &betaWS = arma::vec(),
                const arma::vec &zWS = arma::vec(),
                const arma::vec &uWS = arma::vec());
@@ -67,10 +64,9 @@ public:
     void setThresh(double thresh);
     void setKLB(uint64_t KLB);
     void setMaxIterator(uint64_t maxIter);
-    void setThreadNumber(uint64_t number);
     ~ADMM(){};
 };
 
-Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter, const uint64_t threads);
+Rcpp::List glmLassoCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t KLB, const double thresh, const uint64_t maxIter);
 
 #endif
