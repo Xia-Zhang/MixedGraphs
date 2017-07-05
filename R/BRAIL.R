@@ -5,7 +5,7 @@ get_c <- function(X_k, beta_k, family) {
     if (family == "gaussian") {
         return(1.0)
     }
-    else if(family == "logistic") {
+    else if(family == "binomial") {
         for (i in 1:n) {
             tmp <- 1 /(1 + exp(-(X_k[i,] %*% beta_k)))
             W[i, i] <- tmp * (1 - tmp) / n
@@ -43,13 +43,12 @@ check_stop_criteria <- function(prev_beta, beta) {
 #' X <- list(X1, X2)
 #' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, lasso.control= list(support_stability = 10, max.iter = 1e6, thresh = 0.005), ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
 
-BRAIL <- function(X, y, family = "gaussian", tau = 0.8, B = 200, lasso.control = list(), ridge.control = list()) {
+BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8, B = 200, lasso.control = list(), ridge.control = list()) {
     beta <- lapply(X, function(x){rep(0, ncol(x))})
     K <- length(X)
     n <- length(y)
     family <- tolower(family)
-    if (family == "binomial")
-        family <- "logistic"
+    family <- match.arg(family)
 
     while (TRUE) {
         prev_beta <- beta

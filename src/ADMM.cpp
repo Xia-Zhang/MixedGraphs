@@ -55,16 +55,16 @@ void ADMM::clear() {
     maxIter = 0;
 }
 
-arma::vec ADMM::fit(const std::string method) {
+arma::vec ADMM::fit(const std::string family) {
     uint64_t k = 1, p = X.n_cols;
     // TODO: consensus ADMM partition number
     uint64_t partitions = 1;
     std::vector<ADMMSolver *> solvers(partitions);
-    std::string lowerMethod(method);
+    std::string lowerMethod(family);
     sumUBeta = arma::mat(p, partitions, arma::fill::zeros);
     
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
-    if (lowerMethod == "logistic") {
+    if (lowerMethod == "binomial") {
         initializeSolver<ADMMLogistic>(solvers);
     }
     else if (lowerMethod == "poisson") {

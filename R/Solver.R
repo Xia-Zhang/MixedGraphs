@@ -19,7 +19,7 @@
 #' glmLasso(X, y, o, lambda, family = "binomial", support_stability = 10, thresh = 0.5, max.iter = 1e7)
 #'
 
-glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", support_stability = NULL, thresh = NULL, max.iter = 1e8) {
+glmLasso <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "binomial", "poisson"), support_stability = NULL, thresh = NULL, max.iter = 1e8) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)
@@ -27,10 +27,7 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", support_st
 	if (is.null(o)) o <- rep(0, n)
 	if (length(lambda) < p) lambda <- append(lambda, rep(lambda[2], p - length(lambda)))
 	family <- tolower(family)
-	if (family == "binomial") 
-		family <- "logistic"
-	else if (is.element(family, c('gaussian', 'logistic', 'poisson')) == FALSE) 
-		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
+	family <- match.arg(family)
 	if (is.null(support_stability)) {
 		support_stability <- 0
 	}
@@ -68,16 +65,14 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = "gaussian", support_st
 #' glmRidge(X, y, o, beta.init, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5)
 #'
 
-glmRidge <- function(X, y, o = NULL, beta.init = NULL, lambda = 0.25, family = "gaussian", thresh = 1e-8, max.iter = 1e8) {
+glmRidge <- function(X, y, o = NULL, beta.init = NULL, lambda = 0.25, family = c("gaussian", "binomial", "poisson"), thresh = 1e-8, max.iter = 1e8) {
 	X <- cbind(1, X)
 	n <- nrow(X)
 	p <- ncol(X)
 	if (is.null(o)) o <- rep(0, n)
 	if (is.null(beta.init)) beta.init <- rep(0, p)
 	else if (length(beta.init) == p - 1) beta.init <- append(0, beta.init)
-	if (family == "binomial")
-		family <- "logistic"
-	else if (is.element(family, c('gaussian', 'logistic', 'poisson')) == FALSE)
-		stop("The family should be in c('gaussian', 'logistic', 'poisson').")
+	family <- tolower(family)
+	family <- match.arg(family)
 	.Call('MixedGraphs_glmRidgeCPP', PACKAGE = 'MixedGraphs', X, y, o, beta.init, lambda, family, thresh, max.iter)
 }

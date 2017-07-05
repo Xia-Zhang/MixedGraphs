@@ -28,7 +28,7 @@ public:
                    const double lambda = 0.25,
                    const uint64_t maxIter = 1e8,
                    const double thresh = 1e-8);
-    arma::vec fit(std::string method);
+    arma::vec fit(std::string family);
     virtual arma::vec solve() {return arma::vec();};
     arma::vec solve(const arma::mat &X,
                     const arma::vec &y,

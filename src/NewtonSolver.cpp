@@ -30,12 +30,12 @@ void NewtonSolver::setSolver(const arma::mat &X,
     this->thresh = thresh;
 }
 
-arma::vec NewtonSolver::fit(std::string method) {
+arma::vec NewtonSolver::fit(std::string family) {
     NewtonSolver * solver = NULL;
-    std::string lowerMethod(method);
+    std::string lowerMethod(family);
 
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
-    if (lowerMethod == "logistic") {
+    if (lowerMethod == "binomial") {
         solver = new NewtonLogistic();
     }
     else if (lowerMethod == "poisson") {
