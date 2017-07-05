@@ -68,5 +68,12 @@ public:
     ~NewtonGaussian(){};
 };
 
-Rcpp::List glmRidgeCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec& betaWS, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter);
+Rcpp::NumericVector glmRidgeCPP(const arma::mat& X, 
+                                const arma::vec& y, 
+                                const arma::vec& o, 
+                                const arma::vec& betaWS, 
+                                const double &lambda, 
+                                const std::string family, 
+                                const double thresh, 
+                                const uint64_t maxIter);
 #endif

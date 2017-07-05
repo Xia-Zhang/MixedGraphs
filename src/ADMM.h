@@ -67,6 +67,16 @@ public:
     ~ADMM(){};
 };
 
-Rcpp::List glmLassoCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t support_stability, const double thresh, const uint64_t maxIter);
+Rcpp::NumericVector glmLassoCPP (const arma::mat &X, 
+                        const arma::vec &y, 
+                        const arma::vec &o, 
+                        const arma::vec &lambda, 
+                        const std::string family, 
+                        const uint64_t support_stability, 
+                        const double thresh, 
+                        const uint64_t maxIter, 
+                        const arma::vec &betaWS,
+                        const arma::vec &zWS,
+                        const arma::vec &uWS);
 
 #endif

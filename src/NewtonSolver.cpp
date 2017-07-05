@@ -153,8 +153,14 @@ arma::vec NewtonGaussian::solve() {
 }
 
 // [[Rcpp::export]]
-Rcpp::List glmRidgeCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec& betaWS, const double &lambda, const std::string family, const double thresh, const uint64_t maxIter) {
+Rcpp::NumericVector glmRidgeCPP(const arma::mat& X, 
+                                const arma::vec& y, 
+                                const arma::vec& o, 
+                                const arma::vec& betaWS, 
+                                const double &lambda, 
+                                const std::string family, 
+                                const double thresh, 
+                                const uint64_t maxIter) {
     NewtonSolver newton(X, y, o, betaWS, lambda, maxIter, thresh);
-    arma::vec coef = newton.fit(family);
-    return Rcpp::List::create(Rcpp::Named("Coef") = coef);
+    return Rcpp::wrap(newton.fit(family));
 }

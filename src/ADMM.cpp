@@ -229,8 +229,17 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint64_t num
 }
 
 // [[Rcpp::export]]
-Rcpp::List glmLassoCPP(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const uint64_t support_stability, const double thresh, const uint64_t maxIter) {
-    ADMM admm(X, y, o, lambda, thresh, support_stability, maxIter);
-    arma::vec coef = admm.fit(family);
-    return Rcpp::List::create(Rcpp::Named("Coef") = coef); 
+Rcpp::NumericVector glmLassoCPP (const arma::mat& X, 
+                        const arma::vec& y, 
+                        const arma::vec& o, 
+                        const arma::vec &lambda, 
+                        const std::string family, 
+                        const uint64_t support_stability, 
+                        const double thresh, 
+                        const uint64_t maxIter, 
+                        const arma::vec& betaWS,
+                        const arma::vec &zWS,
+                        const arma::vec &uWS) {
+    ADMM admm(X, y, o, lambda, thresh, support_stability, maxIter, betaWS, zWS, uWS);
+    return Rcpp::wrap(admm.fit(family));
 }

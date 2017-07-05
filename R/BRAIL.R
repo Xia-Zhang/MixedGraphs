@@ -58,6 +58,8 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             c <- get_c(X[[k]], beta[[k]], family)
             tmp_lambda <- c / n * norm(as.matrix(beta[[k]]), "2") * sqrt(log(pk) * beta_norm0)
             lambda <- sapply(beta[[k]], function(x){if(x!=0) {tmp_lambda} else {2*tmp_lambda}})
+
+            # Estimate support indexes, using foreach to parallelize the process
             betak_samples <- 
             foreach::foreach(b = 1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %dopar% {
                 indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
@@ -66,15 +68,18 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
                 multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
                 o <- rowSums(as.matrix(multi_tmp[, -k]))
                 w <- lambda * runif(pk, 0.5, 1.5)
-                lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w)
-                do.call(glmLasso, c(lasso_argv, lasso.control))$Coef[-1]
+                lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w, 
+                                   init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
+                do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
             }
             support_indexes <- which(rowSums(abs(sign(betak_samples)))/B >= tau)
+
+            # Estimate non-zero coefficients
             betak_support <- beta[[k]][support_indexes]
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
             ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, beta.init = prev_beta[[k]][support_indexes], family = family)
-            sub_beta <- do.call(glmRidge, c(ridge_argv, ridge.control))$Coef[-1]
+            sub_beta <- do.call(glmRidge_impl, c(ridge_argv, ridge.control))[-1]
             beta[[k]] <- rep(0, length(beta[[k]]))
             mapply(function(index, value){beta[[k]][index] <<- value}, support_indexes, sub_beta)
         }
