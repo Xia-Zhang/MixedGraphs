@@ -31,6 +31,7 @@ check_stop_criteria <- function(prev_beta, beta) {
 #' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
 #' @param tau is the stability cut-off, which is used for choosing the support features in each block.
 #' @param B is the number of bootstraps in each iteration.
+#' @param doPar is logical value to indicate if the process should be run parallelly by foreach, if FALSE, the doPar will be disabled. The default value is TRUE.
 #' @param lasso.control is a list of glmLasso related arguments, like support_stability, thresh and max.iter.
 #' @param ridge.control is a list of ridgeLasso related arguments, like lambda, max.iter and thresh.
 #'
@@ -41,14 +42,16 @@ check_stop_criteria <- function(prev_beta, beta) {
 #' X2 <- matrix(rnorm(500), ncol = 10)
 #' y <- rbinom(50, 1, 0.6)
 #' X <- list(X1, X2)
-#' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, lasso.control= list(support_stability = 10, max.iter = 1e6, thresh = 0.005), ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
+#' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, doPar = TRUE, lasso.control= list(support_stability = 10, max.iter = 1e6, thresh = 0.005), ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
 
-BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8, B = 200, lasso.control = list(), ridge.control = list()) {
+BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8, B = 200, doPar = TRUE, lasso.control = list(), ridge.control = list()) {
     beta <- lapply(X, function(x){rep(0, ncol(x))})
+    scores <- vector("list", length = length(X))
     K <- length(X)
     n <- length(y)
     family <- tolower(family)
     family <- match.arg(family)
+    if (B <= 0) stop("Invailid B!")
 
     while (TRUE) {
         prev_beta <- beta
@@ -60,19 +63,35 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             lambda <- sapply(beta[[k]], function(x){if(x!=0) {tmp_lambda} else {2*tmp_lambda}})
 
             # Estimate support indexes, using foreach to parallelize the process
-            betak_samples <- 
-            foreach::foreach(b = 1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %dopar% {
-                indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
-                sample_X <- lapply(X, function(x){x[indexes,]})
-                sample_y <- y[indexes]
-                multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
-                o <- rowSums(as.matrix(multi_tmp[, -k]))
-                w <- lambda * runif(pk, 0.5, 1.5)
-                lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w, 
-                                   init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
-                do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
+            betak_samples  <- 
+            if (doPar) {
+                foreach::foreach(1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %dopar% {
+                    indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
+                    sample_X <- lapply(X, function(x){x[indexes,]})
+                    sample_y <- y[indexes]
+                    multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
+                    o <- rowSums(as.matrix(multi_tmp[, -k]))
+                    w <- lambda * runif(pk, 0.5, 1.5)
+                    lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w, 
+                                       init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
+                    do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
+                }
             }
-            support_indexes <- which(rowSums(abs(sign(betak_samples)))/B >= tau)
+            else {
+                foreach::foreach(1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %do% {
+                    indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
+                    sample_X <- lapply(X, function(x){x[indexes,]})
+                    sample_y <- y[indexes]
+                    multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
+                    o <- rowSums(as.matrix(multi_tmp[, -k]))
+                    w <- lambda * runif(pk, 0.5, 1.5)
+                    lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w, 
+                                       init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
+                    do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
+                }
+            }
+            scores[[k]] <- rowSums(abs(sign(betak_samples)))/B
+            support_indexes <- which(scores[[k]] >= tau)
 
             # Estimate non-zero coefficients
             betak_support <- beta[[k]][support_indexes]
@@ -87,5 +106,5 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             break
         }
     }
-    return(beta)
+    return(list("coefficients" = beta, "scores" = scores))
 }

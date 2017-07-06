@@ -2,6 +2,6 @@ useDynLib(MixedGraphs)
 importFrom(Rcpp, evalCpp)
 importFrom(RcppParallel, RcppParallelLibs)
 importFrom(stats, runif)
-importFrom(foreach,"%dopar%") 
+importFrom(foreach,"%dopar%", "%do%") 
 
 export("test", "testNewton", "glmLasso", "glmRidge", "BRAIL")
