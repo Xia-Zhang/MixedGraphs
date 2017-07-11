@@ -10,8 +10,8 @@ r_packages:
   - Rcpp
 
 before_install:
-  - Rscript -e 'Rcpp::compileAttributes()'
   - Rscript -e 'install.packages("roxygen2"); devtools::document()'
+  - Rscript -e 'Rcpp::compileAttributes()'
 
 r_build_args: --no-build-vignettes --no-manual --no-resave-data
 r_check_args: --no-build-vignettes --no-manual
