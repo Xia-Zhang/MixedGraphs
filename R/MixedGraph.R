@@ -16,6 +16,39 @@ guess_family <- function(X) {
     }
 }
 
+#' MixedGraph is used to fit mixed graph model.
+#'
+#' @param X is a list containing k matrices, each of the matrices has n rows and pk columns. They are the 'blocks'. Each block should have all columns of the same type.
+#' @param crf_structure is a K-by-K matrix giving the structure of the CRF
+#'  \itemize{
+#'  \item{element (i, j) is 1}{if element (i, j) is 1 if there are directed edges going from the i-th block to the j-th block;}
+#'  \item{element (i, j) is 0}{if there are no edges going from the i-th block to the j-th block;}
+#'  \item{element (i, i) is 1}{if there are undirected edges within the i-th block;}
+#'  \item{element (i, i) is 0}{if there are not undirected edges within the i-th block}
+#' }
+#' @param family is a K vector giving the data types for each blocks. The type could be "gaussian", "binomial" or "poisson". If NULL, we can use a heuristic to guess the right value
+#' @param rule says whether to use the "AND" or "OR" rule
+#' @param brail_control is a list of optional arguments to be passed to BRAIL internally
+#'
+#' @return the coefficients vector
+#'  \item{data}{ is a list containing k matrices from input}
+#'  \item{graph}{ is a p * p (sparse) matrix giving the edge weights returned by BRAIL}
+#'  \item{family}{ is a K vector giving the data types for each blocks from input, if the input family is NULL, there will be the values guessed in the MixedGraph function}
+#'  \item{crf_structure}{ is a K-by-K matrix giving the structure of the CRF from input}
+#'  \item{stability}{ is a p * p (sparse) matrix giving the stability scores}
+#'
+#' @examples
+#' X1 <- matrix(rnorm(12), nrow = 4)
+#' X2 <- matrix(rnorm(12), nrow = 4)
+#' X <- list(X1, X2)
+#' crf_structure <- matrix(rep(1, 4), nrow = 2)
+#' brail_control <- list(B = 10)
+#' MixedGraph(X, crf_structure, brail_control = brail_control)
+#'
+#' @importFrom foreach %dopar% %:%
+#' @export
+
+
 MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), brail_control = NULL) {
     K <- length(X)
     p <- sum(sapply(X, ncol))
@@ -26,7 +59,9 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
         family <- guess_family(X)
     }
     rule <- match.arg(rule)
-    graph_list <- foreach::foreach(k = 1:K, .packages='MixedGraphs') %:% 
+    k <- 1
+    i <- 1
+    graph_list <- foreach::foreach(k=1:K, .packages='MixedGraphs') %:% 
         foreach::foreach(i = 1:ncol(X[[k]])) %dopar% {
             crf_k <- crf_structure[,k]
             block_indexes <- which(crf_k == 1)

@@ -6,11 +6,11 @@ src-x64
 *.zip
 *.gz
 *.rds
-/glmPR/src/symbols.rds
-glmPR.Rcheck
+/MixedGraphs/src/symbols.rds
+MixedGraphs.Rcheck
 test
-/glmPR/src/.Rhistory
+/MixedGraphs/src/.Rhistory
 .Rhistory
-!/man/MixedGraphs-package.Rd
 /man/*
 RcppExports.*
+NAMESPACE

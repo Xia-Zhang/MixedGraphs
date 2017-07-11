@@ -18,6 +18,7 @@
 #' lambda <- c(1:10)/10
 #' glmLasso(X, y, o, lambda, family = "binomial", support_stability = 10, thresh = 0.5, max.iter = 1e7)
 #'
+#' @export
 
 glmLasso <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "binomial", "poisson"), support_stability = NULL, thresh = NULL, max.iter = 1e8) {
     list("Coef" = glmLasso_impl(X, y, o, lambda, family, support_stability, thresh, max.iter))
@@ -90,6 +91,7 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
 #' o <- rnorm(50)
 #' glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5)
 #'
+#' @export
 
 glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", "binomial", "poisson"), thresh = NULL, max.iter = 1e8) {
     if (is.atomic(lambda) && length(lambda) == 1L) {
