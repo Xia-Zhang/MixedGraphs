@@ -69,8 +69,7 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
     if (is.null(init.u)) init.u <- rep(0, p)
     else if (length(init.u) == p - 1) init.u <- append(0, init.u)
 
-    .Call('MixedGraphs_glmLassoCPP', PACKAGE = 'MixedGraphs', 
-        X, y, o, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u)
+    glmLassoCPP(X, y, o, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u)
 }
 
 #' glmRidge is used to fit models with ridge penalty.
@@ -120,5 +119,5 @@ glmRidge_impl <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", 
     else if (length(beta.init) == p - 1) beta.init <- append(0, beta.init)
     family <- tolower(family)
     family <- match.arg(family)
-    .Call('MixedGraphs_glmRidgeCPP', PACKAGE = 'MixedGraphs', X, y, o, beta.init, lambda, family, thresh, max.iter)
+    glmRidgeCPP(X, y, o, beta.init, lambda, family, thresh, max.iter)
 }
