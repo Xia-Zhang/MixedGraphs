@@ -42,7 +42,7 @@ guess_family <- function(X) {
 #' X2 <- matrix(rnorm(12), nrow = 4)
 #' X <- list(X1, X2)
 #' crf_structure <- matrix(rep(1, 4), nrow = 2)
-#' brail_control <- list(B = 10)
+#' brail_control <- list(B = 2, tau = 0.6)
 #' MixedGraph(X, crf_structure, brail_control = brail_control)
 #'
 #' @importFrom foreach %dopar% %:%
@@ -132,9 +132,8 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
 #' @param x is a MixedGraph object.
 #' @param method is the package or the return type used in the function. When is "igraph", use the package "igraph". When is "cytoscape", record the network of graph modeling language (GML) format, which can be imported in cytoscape.Or we can use the R package RCytoscape. I haven't decided now.
 #' @param weighted is a boolean value, which indicate if we would plot the width of edge according to the weight of edge.
-#' @param thresh is the threshold which decide if the two vertices is connected according to the coefficient value. The default value is 1e-6.
 #' @param stability is the stability threshold, more than it indicate the coefficient between the two vertices can be trusted. 
-#' @param save.fn is the file name to save the plot of MixedGraph object. The default value is NULL, and the graph will be plotted to the screen.
+#' @param out.file is the file name to save the plot of MixedGraph object. The default value is NULL, and the graph will be plotted to the screen.
 #' @param ... other generic arguments for plot method
 #'
 #' @examples
@@ -142,62 +141,65 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
 #' X2 <- matrix(rnorm(12), nrow = 4)
 #' X <- list(X1, X2)
 #' crf_structure <- matrix(rep(1, 4), nrow = 2)
-#' brail_control <- list(B = 10)
+#' brail_control <- list(B = 2, tau = 0.6)
 #' G <- MixedGraph(X, crf_structure, brail_control = brail_control)
 #' plot(G, method = "igraph", weighted = TRUE)
 #' 
 #' @importFrom grDevices dev.off pdf rainbow
 #' @importFrom graphics plot
+#' @import htmlwidgets
 #' @export
 
 
-plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js"), weighted = FALSE, thresh = 1e-6, stability = 1e-6, save.fn = NULL, ...) {
+plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js"), weighted = FALSE, stability = 0.0, out.file = NULL, ...) {
     method <- tolower(method)
     method <- match.arg(method)
     colors <- rainbow(length(x$data), alpha=.7)
-    if (method == "igraph") {
-        network <- x$network
-        indexes <- (abs(network) > thresh & x$stability > stability)
-        # network[indexes] <- 1
-        network[!indexes] <- 0
-        size_list <- cumsum(c(1, sapply(x$data, ncol)))
-        graph_color <- as.vector(sapply(seq_along(colors), function(i){
-            rep(colors[i], ncol(x$data[[i]]))
+    graph_color <- as.vector(sapply(seq_along(colors), function(i){
+        rep(colors[i], ncol(x$data[[i]]))
+    }))
+    network <- x$network
+    indexes <- (x$stability > stability)
+    network[!indexes] <- 0
+    ids <- 1 :length(graph_color)
+    names <- ids
+    if (!is.null(colnames(x$data[[1]]))) {
+        names <- as.vector(sapply(x$data, function(x) {
+            colnames(x)
         }))
+    }
+    if (method == "igraph") {
+        size_list <- cumsum(c(1, sapply(x$data, ncol)))
         graph <- igraph::graph.adjacency(network, weighted = TRUE, mode = "directed")
-        # graph_list <- lapply(seq_along(x$data), function(i){
-        #     sub_network <- network[size_list[i]: size_list[i+1] - 1, size_list[i]: size_list[i+1] - 1]
-        #     graph_sub <- igraph::graph.adjacency(sub_network, "directed")
-        #     V(graph_sub)$color <- colors[i]
-        #     if(is.null(x$data) == FALSE)
-        #         V(graph_sub)$label <- colnames(x$data[[i]])
-
-        #     graph_sub
-        # })
-        # %u%
-        #rgb(10, 100, 100, maxColorValue=255)
-        # graph <- graph.union(graph_list)
-        # if(is.null(x$data) == FALSE)
-        #     V(graph_sub)$label <- colnames(x$data[[i]])
         if(weighted)
             igraph::E(graph)$width <- 0.5 + abs(igraph::E(graph)$weight)
         igraph::V(graph)$color <- unlist(graph_color)
         igraph::V(graph)$size <- 40
+        igraph::V(graph)$name <- names
+        igraph::V(graph)$id <- ids
         igraph::E(graph)$arrow.size <- .5
+
+        if(is.null(out.file) == FALSE){
+            pdf(out.file)
+            plot(graph)
+            dev.off()
+            cat(paste("Output file: ", out.file, "\n",sep=""))
+        }
+        else {
+            plot(graph)
+        }
     }
     else if (method == "cytoscape") {
         # save the graph in cytoscape
     }
+    # width, 
     else if (method == "cytoscape.js") {
+        nodes <- data.frame(id = ids, name = names, color = graph_color)
+        rownames(nodes) <- NULL
 
-    }
-    if(is.null(save.fn) == FALSE){
-        pdf(save.fn)
-        plot(graph)
-        dev.off()
-        cat(paste("Output file: ", save.fn, "\n",sep=""))
-    }
-    else {
-        plot(graph)
+        matirx_indexes <- which(network != 0, arr.ind=T)
+        edges <- data.frame(source = matirx_indexes[,"row"], target = matirx_indexes[,"col"])
+        cy <- list(nodes = unname(split(nodes, 1:nrow(nodes))), edges = unname(split(edges, 1:nrow(edges))))
+        Cytoscapejs(cy)
     }
 }
