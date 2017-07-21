@@ -154,8 +154,10 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
 plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js"), weighted = FALSE, stability = 0.0, out.file = NULL, ...) {
     method <- tolower(method)
     method <- match.arg(method)
-    colors <- rainbow(length(x$data), alpha=.7)
-    graph_color <- as.vector(sapply(seq_along(colors), function(i){
+    colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
+    if (length(x$data) > 12)
+        colors <- c(colors, rainbow(length(x$data) - 12, alpha=.8))
+    graph_color <- as.vector(sapply(seq_along(x$data), function(i){
         rep(colors[i], ncol(x$data[[i]]))
     }))
     network <- x$network
@@ -174,7 +176,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         if(weighted)
             igraph::E(graph)$width <- 0.5 + abs(igraph::E(graph)$weight)
         igraph::V(graph)$color <- unlist(graph_color)
-        igraph::V(graph)$size <- 40
+        igraph::V(graph)$size <- 20
         igraph::V(graph)$name <- names
         igraph::V(graph)$id <- ids
         igraph::E(graph)$arrow.size <- .5
@@ -196,10 +198,19 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     else if (method == "cytoscape.js") {
         nodes <- data.frame(id = ids, name = names, color = graph_color)
         rownames(nodes) <- NULL
-
+        node_entries <- apply(nodes, 1, function(x) {
+            list(data = as.list(x))
+        })
         matirx_indexes <- which(network != 0, arr.ind=T)
-        edges <- data.frame(source = matirx_indexes[,"row"], target = matirx_indexes[,"col"])
-        cy <- list(nodes = unname(split(nodes, 1:nrow(nodes))), edges = unname(split(edges, 1:nrow(edges))))
+        if (weighted)
+            edges <- data.frame(source = matirx_indexes[,"row"], target = matirx_indexes[,"col"], weight = network[matirx_indexes])
+        else {
+            edges <- data.frame(source = matirx_indexes[,"row"], target = matirx_indexes[,"col"])
+        }
+        edges_entries <- apply(edges, 1, function(x) {
+            list(data = as.list(x))
+        })
+        cy <- list(nodes = node_entries, edges = edges_entries)
         Cytoscapejs(cy)
     }
 }

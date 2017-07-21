@@ -1,9 +1,3 @@
-#' <Add Title>
-#'
-#' <Add Description>
-#'
-#' @import htmlwidgets
-#'
 Cytoscapejs <- function(cy, width = NULL, height = NULL, elementId = NULL) {
 
   # forward options using x
