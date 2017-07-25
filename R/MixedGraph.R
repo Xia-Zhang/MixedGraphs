@@ -16,6 +16,13 @@ guess_family <- function(X) {
     }
 }
 
+produce_colors <- function(K) {
+    colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
+    if (K > 12)
+        colors <- c(colors, rainbow(K - 12, alpha=.8))
+    colors
+}
+
 #' MixedGraph is used to fit mixed graph model.
 #'
 #' @param X is a list containing k matrices, each of the matrices has n rows and pk columns. They are the 'blocks'. Each block should have all columns of the same type.
@@ -36,6 +43,7 @@ guess_family <- function(X) {
 #'  \item{family}{ is a K vector giving the data types for each blocks from input, if the input family is NULL, there will be the values guessed in the MixedGraph function}
 #'  \item{crf_structure}{ is a K-by-K matrix giving the structure of the CRF from input}
 #'  \item{stability}{ is a p * p (sparse) matrix giving the stability scores}
+#'  \item{rule}{"AND" or "OR" rule for edge selection within blocks}
 #'
 #' @examples
 #' X1 <- matrix(rnorm(12), nrow = 4)
@@ -58,15 +66,17 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
     if (is.null(family)) {
         family <- guess_family(X)
     }
+    rule <- toupper(rule)
     rule <- match.arg(rule)
+
     k <- 1
     i <- 1
-    graph_list <- foreach::foreach(k=1:K, .packages='MixedGraphs') %:% 
+    graph_list <- foreach::foreach(k = 1:K, .packages='MixedGraphs') %:% 
         foreach::foreach(i = 1:ncol(X[[k]])) %dopar% {
             crf_k <- crf_structure[,k]
             block_indexes <- which(crf_k == 1)
             brail_X <- X[block_indexes]
-            index_k <- match(k, block_indexes)
+            index_k <- match(k, block_indexes) # whether block has undirected edges
             if (is.na(index_k) == FALSE) {
                 brail_X[[index_k]] <- X[[k]][,-i]
             }
@@ -74,6 +84,7 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
             brail_family <- family[k]
             brail_argv <- list(X = brail_X, y = brail_y, family = brail_family, doPar = FALSE)
             brail_res <- do.call(BRAIL, c(brail_argv, brail_control))
+            
             index <- 0
             coef <- lapply(crf_k, function(tmp_k) {
                 if (tmp_k == 0) {
@@ -122,6 +133,7 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
         })
     })
     result$stability <- matrix(unlist(tmp_stability), nrow = p)
+    result$rule <- rule
     class(result) <- "MixedGraph"
     result
 }
@@ -154,41 +166,80 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
 plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js"), weighted = FALSE, stability = 0.0, out.file = NULL, ...) {
     method <- tolower(method)
     method <- match.arg(method)
-    colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
-    if (length(x$data) > 12)
-        colors <- c(colors, rainbow(length(x$data) - 12, alpha=.8))
+    K <- length(x$data)
+    size_list <- cumsum(c(1, sapply(x$data, ncol)))
+
+    colors <- produce_colors(K)
     graph_color <- as.vector(sapply(seq_along(x$data), function(i){
         rep(colors[i], ncol(x$data[[i]]))
     }))
+    graph_color <- unlist(graph_color)
+
     network <- x$network
-    indexes <- (x$stability > stability)
+    indexes <- (x$stability >= stability)
     network[!indexes] <- 0
-    ids <- 1 :length(graph_color)
-    names <- ids
+    directed_network <- network
+    sapply(1:K, function(i) {
+        indexes <- size_list[i] : (size_list[i + 1] - 1)
+        print(indexes)
+        directed_network[indexes, indexes] <<- 0
+    })
+
+    undirected_network <- network
+    undirected_network[directed_network!=0] <- 0.0
+    if (x$rule == "AND") {
+        undirected_network[!(undirected_network & base::t(undirected_network))] <- 0
+    }
+    else {
+        undirected_network[!(undirected_network | base::t(undirected_network))] <- 0
+    }
+    undirected_network <- (undirected_network + base::t(undirected_network)) / 2
+
+    ids <- 1 : length(graph_color)
+    labelnames <- ids
     if (!is.null(colnames(x$data[[1]]))) {
-        names <- as.vector(sapply(x$data, function(x) {
+        labelnames <- as.vector(sapply(x$data, function(x) {
             colnames(x)
         }))
     }
+
+    print(labelnames)
     if (method == "igraph") {
-        size_list <- cumsum(c(1, sapply(x$data, ncol)))
-        graph <- igraph::graph.adjacency(network, weighted = TRUE, mode = "directed")
-        if(weighted)
-            igraph::E(graph)$width <- 0.5 + abs(igraph::E(graph)$weight)
-        igraph::V(graph)$color <- unlist(graph_color)
-        igraph::V(graph)$size <- 20
-        igraph::V(graph)$name <- names
-        igraph::V(graph)$id <- ids
-        igraph::E(graph)$arrow.size <- .5
+        argv_list <- list(...)
+        directed_graph <- igraph::graph.adjacency(directed_network, weighted = TRUE, mode = "directed")
+        igraph::V(directed_graph)$name <- ids
+        directed_arrow_size <- 0.5
+        if ("arrow.size" %in% names(argv_list)) {         
+            directed_arrow_size <- argv_list["arrow.size"]
+            argv_list["arrow.size"] <- NULL  
+        }
+
+        undirected_graph <- igraph::graph.adjacency(undirected_network, weighted = TRUE, mode = "directed")
+        igraph::V(undirected_graph)$name <- ids
+        edge_start <- igraph::ends(undirected_graph, es=igraph::E(undirected_graph), names=F)[,1]
+        undirected_edge_color <- graph_color[edge_start]
+
+        if(weighted){
+            igraph::E(directed_graph)$width <- 0.5 + abs(igraph::E(directed_graph)$weight)
+            igraph::E(undirected_graph)$width <- 0.5 + abs(igraph::E(undirected_graph)$weight)
+        }
+        argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames))
+
+        if ("layout" %in% names(argv_list)) {
+            layout <- igraph::layout_in_circle(directed_graph)
+            argv_list <- c(argv_list, list(layout = layout))
+        }
 
         if(is.null(out.file) == FALSE){
             pdf(out.file)
-            plot(graph)
+            do.call(igraph::plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
+            do.call(igraph::plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0), argv_list))
             dev.off()
-            cat(paste("Output file: ", out.file, "\n",sep=""))
+            cat(paste("Output file: ", out.file, "\n", sep=""))
         }
         else {
-            plot(graph)
+            do.call(igraph::plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
+            do.call(igraph::plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0, edge.color = undirected_edge_color), argv_list))
         }
     }
     else if (method == "cytoscape") {
@@ -196,16 +247,16 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     }
     # width, 
     else if (method == "cytoscape.js") {
-        nodes <- data.frame(id = ids, name = names, color = graph_color)
+        nodes <- data.frame(id = ids, name = labelnames, color = graph_color)
         rownames(nodes) <- NULL
         node_entries <- apply(nodes, 1, function(x) {
             list(data = as.list(x))
         })
-        matirx_indexes <- which(network != 0, arr.ind=T)
+        matrix_indexes <- which(network != 0, arr.ind=T)
         if (weighted)
-            edges <- data.frame(source = matirx_indexes[,"row"], target = matirx_indexes[,"col"], weight = network[matirx_indexes])
+            edges <- data.frame(source = matrix_indexes[,"row"], target = matrix_indexes[,"col"], weight = network[matrix_indexes])
         else {
-            edges <- data.frame(source = matirx_indexes[,"row"], target = matirx_indexes[,"col"])
+            edges <- data.frame(source = matrix_indexes[,"row"], target = matrix_indexes[,"col"])
         }
         edges_entries <- apply(edges, 1, function(x) {
             list(data = as.list(x))
