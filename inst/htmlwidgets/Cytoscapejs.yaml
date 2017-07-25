@@ -1,7 +1,7 @@
 # (uncomment to add a dependency)
 dependencies:
- - name: cytoscape.js
-   version: 3.1.4
-   src: "htmlwidgets/lib"
-   script: cytoscape.min.js
-   
+  - name: cytoscape.js
+    version: 3.1.4
+    src: "htmlwidgets/lib"
+    script: cytoscape.min.js
+

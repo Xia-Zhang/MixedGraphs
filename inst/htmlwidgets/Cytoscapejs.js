@@ -13,11 +13,7 @@ HTMLWidgets.widget({
           node.data.color = node.data.color.substring(0, 7);
         }
         for (var edge of x.edges) {
-          if (edge.data.weight) {
-            edge.data.renderWeight = Math.abs(edge.data.weight * 10);  
-          } else {
-            edge.data.renderWeight = 5;
-          }
+          edge.data.directed = (Math.random() > 0.5)
         }
 
         cytoscape({
@@ -41,9 +37,9 @@ HTMLWidgets.widget({
               selector: 'edge',
               style: {
                 'curve-style': 'bezier',
-                'target-arrow-shape': 'triangle',
-                'source-arrow-shape': 'circle',                
-                'width': 'data(renderWeight)',
+                'target-arrow-shape': function(ele) { return ele.data('directed') ? 'triangle' : 'none' },
+                'source-arrow-shape': 'none',
+                'width': function(ele) { return ele.data('weight') ? Math.abs(ele.data('weight') * 10) : 5 },
                 'line-color': '#aaaaaa'
               }
             }

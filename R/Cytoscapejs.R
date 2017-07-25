@@ -2,7 +2,6 @@ Cytoscapejs <- function(cy, width = NULL, height = NULL, elementId = NULL) {
 
   # forward options using x
   x <- cy
-  print(x)
   # create widget
   htmlwidgets::createWidget(
     name = 'Cytoscapejs',

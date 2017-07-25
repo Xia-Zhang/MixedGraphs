@@ -207,7 +207,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames))
 
         if (!"layout" %in% names(argv_list)) {
-            layout <- igraph::layout_in_circle(directed_graph)
+            layout <- igraph::layout.graphopt(directed_graph)
             argv_list <- c(argv_list, list(layout = layout))
         }
 
@@ -226,18 +226,28 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     else if (method == "cytoscape") {
         # save the graph in cytoscape
     }
-    # width, 
     else if (method == "cytoscape.js") {
         nodes <- data.frame(id = ids, name = labelnames, color = graph_color)
-        rownames(nodes) <- NULL
         node_entries <- apply(nodes, 1, function(x) {
+            x[1] = trimws(x[1])
+            x[2] = trimws(x[2])
             list(data = as.list(x))
         })
-        matrix_indexes <- which(network != 0, arr.ind=T)
-        if (weighted)
-            edges <- data.frame(source = matrix_indexes[,"row"], target = matrix_indexes[,"col"], weight = network[matrix_indexes])
+
+        directed_indexes <- which(directed_network != 0, arr.ind=T)
+        undirected_network[lower.tri(undirected_network)] <- 0
+        undirected_indexes <- which(undirected_network != 0, arr.ind=T)
+        if (weighted) {
+            edges <- data.frame(source = directed_indexes[,"row"], target = directed_indexes[,"col"], 
+                                weight = directed_network[directed_indexes], directed = rep(TRUE, nrow(directed_indexes)))
+            edges <- rbind(edges, data.frame(source = undirected_indexes[,"row"], target = undirected_indexes[,"col"], 
+                                weight = undirected_network[undirected_indexes], directed = rep(FALSE, nrow(undirected_indexes))))
+        }
         else {
-            edges <- data.frame(source = matrix_indexes[,"row"], target = matrix_indexes[,"col"])
+            edges <- data.frame(source = directed_indexes[,"row"], target = directed_indexes[,"col"], 
+                                directed = rep(TRUE, nrow(directed_indexes)))
+            edges <- rbind(edges, data.frame(source = undirected_indexes[,"row"], target = undirected_indexes[,"col"], 
+                                directed = rep(FALSE, nrow(undirected_indexes))))
         }
         edges_entries <- apply(edges, 1, function(x) {
             list(data = as.list(x))
