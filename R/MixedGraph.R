@@ -69,6 +69,14 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
     rule <- toupper(rule)
     rule <- match.arg(rule)
 
+    ncols <- sapply(X, ncol)
+    size_list <- cumsum(c(1, ncols))
+    indexes_mask <- matrix(unlist(sapply(1:K, function(i){
+        print(rep(rep(crf_structure[,i], ncols), ncols[i]))
+        rep(rep(crf_structure[,i], ncols), ncols[i])
+    })), nrow = p)
+    diag(indexes_mask) <- 0
+
     k <- 1
     i <- 1
     graph_list <- foreach::foreach(k = 1:K, .packages='MixedGraphs') %:% 
@@ -85,54 +93,29 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
             brail_argv <- list(X = brail_X, y = brail_y, family = brail_family, doPar = FALSE)
             brail_res <- do.call(BRAIL, c(brail_argv, brail_control))
             
-            index <- 0
-            coef <- lapply(crf_k, function(tmp_k) {
-                if (tmp_k == 0) {
-                    rep(0, length(X[crf_k]))
-                }
-                else {
-                    index <<- index + 1
-                    if (block_indexes[index] == k) {
-                        append(brail_res$coefficients[[index]], 0, after = i - 1)
-                    }
-                    else {
-                        brail_res$coefficients[[index]]
-                    }
-                }
-            })
-            index <- 0
-            score <- lapply(crf_k, function(tmp_k) {
-                if (tmp_k == 0) {
-                    rep(0, length(X[crf_k]))
-                }
-                else {
-                    index <<- index + 1
-                    if (block_indexes[index] == k) {
-                        append(brail_res$score[[index]], 0, after = i - 1)
-                    }
-                    else {
-                        brail_res$score[[index]]
-                    }
-                }
-            })
-            list(unlist(coef), unlist(score))
+            coef <- rep(0, p)
+            coef[which(indexes_mask[,size_list[k] + i - 1] == 1)] <- unlist(brail_res$coefficients)
+
+            score <- rep(0, p)
+            score[which(indexes_mask[,size_list[k] + i - 1] == 1)] <- unlist(brail_res$score)
+
+            list(coef = coef, score = score)
         }
+
     result <- list()
     result$data <- X
-    tmp_graph <- sapply(graph_list, function(x) {
+    result$network <- matrix(unlist(sapply(graph_list, function(x) {
         tmp_list <- sapply(x, function(subx) {
-            unlist(subx[[1]])
+            unlist(subx$coef)
         })
-    })
-    result$network <- matrix(unlist(tmp_graph), nrow = p)
+    })), p, p)
     result$family <- family
     result$crf_structure <- crf_structure
-    tmp_stability <- sapply(graph_list, function(x) {
+    result$stability <- matrix(unlist(sapply(graph_list, function(x) {
         tmp_list <- sapply(x, function(subx) {
             unlist(subx[[2]])
         })
-    })
-    result$stability <- matrix(unlist(tmp_stability), nrow = p)
+    })), p, p)
     result$rule <- rule
     class(result) <- "MixedGraph"
     result
@@ -181,7 +164,6 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     directed_network <- network
     sapply(1:K, function(i) {
         indexes <- size_list[i] : (size_list[i + 1] - 1)
-        print(indexes)
         directed_network[indexes, indexes] <<- 0
     })
 
@@ -203,7 +185,6 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         }))
     }
 
-    print(labelnames)
     if (method == "igraph") {
         argv_list <- list(...)
         directed_graph <- igraph::graph.adjacency(directed_network, weighted = TRUE, mode = "directed")
@@ -225,7 +206,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         }
         argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames))
 
-        if ("layout" %in% names(argv_list)) {
+        if (!"layout" %in% names(argv_list)) {
             layout <- igraph::layout_in_circle(directed_graph)
             argv_list <- c(argv_list, list(layout = layout))
         }
