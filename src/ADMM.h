@@ -30,7 +30,7 @@ private:
     void deleteSolver(std::vector<ADMMSolver *> &solvers);
     arma::vec updateUBeta(std::vector<ADMMSolver *> &solvers);
     void updateZ();
-    void softThreashold(const arma::vec &sum, arma::vec &value);
+    arma::vec softThreashold(const arma::vec &x);
     bool stopCriteria();
     void setVec(arma::vec &target, const arma::vec &source, const uint64_t num);
 

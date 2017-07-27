@@ -57,6 +57,10 @@ public:
 };
 
 class ADMMGaussian : public ADMMSolver {
+private:
+    arma::vec betaRidge;
+    arma::mat tmpInv;
+
 public:
     ADMMGaussian(const arma::mat &X, 
                  const arma::vec &y, 

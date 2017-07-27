@@ -21,7 +21,6 @@
 #' @export
 
 glmLasso <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "binomial", "poisson"), support_stability = NULL, thresh = NULL, max.iter = 1e8) {
-    list("Coef" = glmLasso_impl(X, y, o, lambda, family, support_stability, thresh, max.iter))
     if (is.atomic(lambda) && length(lambda) == 1L) {
         if (is.null(thresh)) thresh <- 1e-8
         list("Coef" = glmLasso_impl(X, y, o, lambda, family, support_stability, thresh, max.iter))

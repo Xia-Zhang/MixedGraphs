@@ -76,6 +76,7 @@ arma::vec ADMM::fit(const std::string family) {
     z = zWS;
 
     while (k <= maxIter) {
+        Rcpp::checkUserInterrupt();
         updateUBeta(solvers);
         updateZ();
         if (stopCriteria()) {
@@ -178,22 +179,11 @@ arma::vec ADMM::updateUBeta(std::vector<ADMMSolver *> &solvers) {
 }
 
 void ADMM::updateZ() {
-    softThreashold(sum(sumUBeta, 1) / sumUBeta.n_cols, this->z);
+    this->z = softThreashold(sum(sumUBeta, 1) / sumUBeta.n_cols);
 }
 
-void ADMM::softThreashold(const arma::vec &sum, arma::vec &value) {
-    uint64_t p = X.n_cols;
-    for (uint64_t i = 0; i < p; i++) {
-        if (sum[i] > lambda[i]) {
-            value[i] = sum[i] - lambda[i];
-        }
-        else if (sum[i] < (-1) * lambda[i]) {
-            value[i] = sum[i] + lambda[i];
-        }
-        else {
-            value[i] = 0;
-        }
-    }
+arma::vec ADMM::softThreashold(const arma::vec &x) {
+    return sign(x) % arma::max(abs(x) - lambda, arma::vec(x.n_elem, arma::fill::zeros));
 }
 
 bool ADMM::stopCriteria() {
@@ -202,10 +192,9 @@ bool ADMM::stopCriteria() {
         result = (std::sqrt(arma::sum(arma::square(z - preZ))) <= thresh);
     }
     else {
-        uint64_t tmpsupport_stability = 5;
         bool remainSame = arma::all(sign(preZ) == sign(z));
-        if (support_stability) {
-            tmpsupport_stability = support_stability;
+        if (!support_stability) {
+            support_stability = 5;
         }
         if (remainSame) {
             supportIter += 1;
@@ -213,7 +202,7 @@ bool ADMM::stopCriteria() {
         else {
             supportIter = 0;
         }
-        result = (supportIter >= tmpsupport_stability);
+        result = (supportIter >= support_stability);
     }
     preZ = z;
     return result;
