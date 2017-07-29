@@ -12,6 +12,7 @@ protected:
     double lambda;
     uint64_t maxIter;
     double thresh;
+    bool intercept;
 public:
     NewtonSolver(){};
     NewtonSolver(const arma::mat &X,
@@ -20,14 +21,16 @@ public:
                  const arma::vec betaWS = arma::vec(),
                  const double lambda = 0.25,
                  const uint64_t maxIter = 1e8,
-                 const double thresh = 1e-8);
+                 const double thresh = 1e-8,
+                 const bool intercept = true);
     void setSolver(const arma::mat &X,
                    const arma::vec &y,
                    const arma::vec &o = arma::vec(),
                    const arma::vec betaWS = arma::vec(),
                    const double lambda = 0.25,
                    const uint64_t maxIter = 1e8,
-                   const double thresh = 1e-8);
+                   const double thresh = 1e-8,
+                   const bool intercept = true);
     arma::vec fit(std::string family);
     virtual arma::vec solve() {return arma::vec();};
     arma::vec solve(const arma::mat &X,
@@ -36,7 +39,8 @@ public:
                     const arma::vec betaWS = arma::vec(),
                     const double lambda = 0.25,
                     const uint64_t maxIter = 1e8,
-                    const double thresh = 1e-8);
+                    const double thresh = 1e-8,
+                    const bool intercept = true);
     void setLambda(const double lambda = 0.25);
     virtual ~NewtonSolver(){};
 };
@@ -47,7 +51,7 @@ private:
     arma::mat getHessian(const arma::vec &beta);
 public:
     arma::vec solve();
-    NewtonLogistic(){};
+    NewtonLogistic(const NewtonSolver &solver) : NewtonSolver(solver){};
     ~NewtonLogistic(){};
 };
 
@@ -57,14 +61,14 @@ private:
     arma::mat getHessian(const arma::vec &beta);
 public:
     arma::vec solve();
-    NewtonPoisson(){};
+    NewtonPoisson(const NewtonSolver &solver) : NewtonSolver(solver){};
     ~NewtonPoisson(){};
 };
 
 class NewtonGaussian : public NewtonSolver{
 public:
     arma::vec solve();
-    NewtonGaussian(){};
+    NewtonGaussian(const NewtonSolver &solver) : NewtonSolver(solver){};
     ~NewtonGaussian(){};
 };
 

@@ -6,8 +6,9 @@ NewtonSolver::NewtonSolver(const arma::mat &X,
                            const arma::vec betaWS,
                            const double lambda,
                            const uint64_t maxIter,
-                           const double thresh) {
-    setSolver(X, y, o, betaWS, lambda, maxIter, thresh);
+                           const double thresh,
+                           const bool intercept) {
+    setSolver(X, y, o, betaWS, lambda, maxIter, thresh, intercept);
 }
 
 void NewtonSolver::setSolver(const arma::mat &X,
@@ -16,7 +17,8 @@ void NewtonSolver::setSolver(const arma::mat &X,
                              const arma::vec betaWS,
                              const double lambda,
                              const uint64_t maxIter,
-                             const double thresh) {
+                             const double thresh,
+                             const bool intercept) {
     this->X = X;
     this->y = y;
     if (o.empty())
@@ -28,6 +30,7 @@ void NewtonSolver::setSolver(const arma::mat &X,
     this->lambda = lambda;
     this->maxIter = maxIter;
     this->thresh = thresh;
+    this->intercept = intercept;
 }
 
 arma::vec NewtonSolver::fit(std::string family) {
@@ -36,16 +39,16 @@ arma::vec NewtonSolver::fit(std::string family) {
 
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
     if (lowerMethod == "binomial") {
-        solver = new NewtonLogistic();
+        solver = new NewtonLogistic(*this);
     }
     else if (lowerMethod == "poisson") {
-        solver = new NewtonPoisson();
+        solver = new NewtonPoisson(*this);
     }
     else if (lowerMethod == "gaussian"){
-        solver = new NewtonGaussian();
+        solver = new NewtonGaussian(*this);
     }
 
-    solver->setSolver(this->X, this->y, this->o, this->betaWS, this->lambda);
+    // solver->setSolver(this->X, this->y, this->o, this->betaWS, this->lambda);
     arma::vec result = solver->solve();
 
     delete solver;
@@ -58,8 +61,9 @@ arma::vec NewtonSolver::solve(const arma::mat &X,
                               const arma::vec betaWS,
                               const double lambda,
                               const uint64_t maxIter,
-                              const double thresh){
-    setSolver(X, y, o, betaWS, lambda, maxIter, thresh);
+                              const double thresh,
+                              const bool intercept){
+    setSolver(X, y, o, betaWS, lambda, maxIter, thresh, intercept);
     return solve();
 }
 
@@ -69,23 +73,27 @@ void NewtonSolver::setLambda(const double lambda) {
 
 arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
     uint64_t n = X.n_rows;
-    arma::vec vecP(n);
+    arma::vec vecP(n), lambdaBeta;
     for (uint64_t i = 0; i < n; i++) {
         vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
     }
-    return X.t() * (vecP - y) / n + lambda * beta;
+    lambdaBeta = lambda * beta;
+    if (intercept) lambdaBeta[0] = 0;
+    return X.t() * (vecP - y) / n + lambdaBeta;
 }
 
 arma::mat NewtonLogistic::getHessian(const arma::vec &beta) {
     uint64_t n = X.n_rows, p = X.n_cols;
     double doubleP;
-    arma::mat W(n, n, arma::fill::zeros);
+    arma::mat W(n, n, arma::fill::zeros), lambdaI;
     
     for (uint64_t i = 0; i < n; i++) {
         doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
         W(i, i) = doubleP * (1 - doubleP);
     }
-    return X.t() * W * X / n + lambda * arma::eye<arma::mat>(p, p);
+    lambdaI = lambda * arma::eye<arma::mat>(p, p);
+    if (intercept) lambdaI(0, 0) = 0;
+    return X.t() * W * X / n + lambdaI;
 }
 
 arma::vec NewtonLogistic::solve() {
@@ -108,22 +116,26 @@ arma::vec NewtonLogistic::solve() {
 
 arma::vec NewtonPoisson::getGradient(const arma::vec &beta) {
     uint64_t n = X.n_rows;
-    arma::vec vecV(n);
+    arma::vec vecV(n), lambdaBeta;
 
     for (uint64_t i = 0; i < n; i++) {
         vecV[i] = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    return X.t() * (vecV - y) / n + lambda * beta;
+    lambdaBeta = lambda * beta;
+    if (intercept) lambdaBeta[0] = 0;
+    return X.t() * (vecV - y) / n + lambdaBeta;
 }
 
 arma::mat NewtonPoisson::getHessian(const arma::vec &beta) {
     uint64_t n = X.n_rows, p = X.n_cols;
-    arma::mat W(n, n, arma::fill::zeros);
+    arma::mat W(n, n, arma::fill::zeros), lambdaI;
 
     for (uint64_t i = 0; i < n; i++) {
         W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    return X.t() * W * X / n + lambda * arma::eye<arma::mat>(p, p);
+    lambdaI = lambda * arma::eye<arma::mat>(p, p);
+    if (intercept) lambdaI(0, 0) = 0;
+    return X.t() * W * X / n + lambdaI;
 }
 
 arma::vec NewtonPoisson::solve() {
@@ -149,7 +161,11 @@ arma::vec NewtonGaussian::solve() {
         Rcpp::stop("The input matrix and response vector shouldn't be empty!");
     }
     uint64_t n = X.n_rows, p = X.n_cols;
-    return (X.t() * X / n + lambda * arma::eye<arma::mat>(p, p)).i() * X.t() * (y - o) / n;
+    arma::mat lambdaI = lambda * arma::eye<arma::mat>(p, p);
+    if (intercept) {
+        lambdaI(0, 0) = 0;
+    }
+    return (X.t() * X / n + lambdaI).i() * X.t() * (y - o) / n;
 }
 
 // [[Rcpp::export]]
@@ -160,7 +176,8 @@ Rcpp::NumericVector glmRidgeCPP(const arma::mat& X,
                                 const double &lambda, 
                                 const std::string family, 
                                 const double thresh, 
-                                const uint64_t maxIter) {
-    NewtonSolver newton(X, y, o, betaWS, lambda, maxIter, thresh);
+                                const uint64_t maxIter,
+                                const bool intercept) {
+    NewtonSolver newton(X, y, o, betaWS, lambda, maxIter, thresh, intercept);
     return Rcpp::wrap(newton.fit(family));
 }

@@ -43,7 +43,7 @@ check_stop_criteria <- function(prev_beta, beta) {
 #' y <- rbinom(50, 1, 0.6)
 #' X <- list(X1, X2)
 #' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, doPar = TRUE, 
-#' lasso.control= list(support_stability = 10, max.iter = 1e6, thresh = 0.005), 
+#' lasso.control= list(support_stability = 10, max.iter = 1e6),
 #' ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
 #'
 #' @importFrom foreach %dopar% %do%
