@@ -31,20 +31,22 @@ arma::vec ADMMLogistic::getGradient(const arma::vec &z) {
     return X.t() * (vecP - y) / n + beta - z + u;
 }
 
-arma::mat ADMMLogistic::getHessian() {
+arma::mat ADMMLogistic::getHessianInv() {
     uint64_t n = X.n_rows, p = X.n_cols;
     double doubleP;
     arma::mat W(n, n, arma::fill::zeros);
-    
+
     for (uint64_t i = 0; i < n; i++) {
         doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
         W(i, i) = doubleP * (1 - doubleP);
     }
-    return X.t() * W * X / n + arma::eye<arma::mat>(p, p);
+    W /= n;
+    if (XX.empty()) XX = X * X.t();
+    return arma::eye<arma::mat>(p, p) - X.t() * (W.i() + XX).i() * X;
 }
 
 void ADMMLogistic::updateBeta(const arma::vec &z) {
-    beta = beta - arma::solve(getHessian(), getGradient(z));
+    beta = beta - getHessianInv() * getGradient(z);
 }
 
 arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
@@ -57,18 +59,20 @@ arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
     return X.t() * (vecV - y) / n + beta - z + u;
 }
 
-arma::mat ADMMPoisson::getHessian() {
+arma::mat ADMMPoisson::getHessianInv() {
     uint64_t n = X.n_rows, p = X.n_cols;
     arma::mat W(n, n, arma::fill::zeros);
 
     for (uint64_t i = 0; i < n; i++) {
         W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    return X.t() * W * X / n + arma::eye<arma::mat>(p, p);
+    W /= n;
+    if (XX.empty()) XX = X * X.t();
+    return arma::eye<arma::mat>(p, p) - X.t() * (W.i() + XX).i() * X;
 }
 
 void ADMMPoisson::updateBeta(const arma::vec &z) {
-    beta = beta - arma::solve(getHessian(), getGradient(z));
+    beta = beta - getHessianInv() * getGradient(z);
 }
 
 void ADMMGaussian::updateBeta(const arma::vec &z) {

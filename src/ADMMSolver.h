@@ -28,6 +28,8 @@ public:
 };
 
 class ADMMLogistic : public ADMMSolver {
+private:
+    arma::mat XX;
 public:
     ADMMLogistic(const arma::mat &X, 
                  const arma::vec &y, 
@@ -35,13 +37,14 @@ public:
                  const arma::vec beta,
                  const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
     arma::vec getGradient(const arma::vec &z);
-    arma::mat getHessian();
+    arma::mat getHessianInv();
     void updateBeta(const arma::vec &z);
     ~ADMMLogistic(){};
-    
 };
 
 class ADMMPoisson : public ADMMSolver {
+private:
+    arma::mat XX;
 public:
     ADMMPoisson(const arma::mat &X, 
                 const arma::vec &y, 
@@ -49,11 +52,10 @@ public:
                 const arma::vec beta,
                 const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
     arma::vec getGradient(const arma::vec &z);
-    arma::mat getHessian();
+    arma::mat getHessianInv();
     arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
     ~ADMMPoisson(){};
-    
 };
 
 class ADMMGaussian : public ADMMSolver {
@@ -70,8 +72,6 @@ public:
     arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
     ~ADMMGaussian(){};
-    
 };
 
-Rcpp::List glmLasso(const arma::mat& X, const arma::vec& y, const arma::vec& o, const arma::vec &lambda, const std::string family, const double thresh, const uint64_t maxIter);
 #endif
