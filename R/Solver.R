@@ -6,7 +6,7 @@
 #' @param lambda is the penalty weight vector, can also be a single value, we may apply the scalar to a vector in our function.
 #' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
 #' @param support_stability is the iterations number which the support set unchanged.
-#' @param thresh is the precision when the solver to stop optimizition process. Parameter thresh and support_stability can not be set at the same time.
+#' @param thresh is the precision when the solver to stop optimization process. Parameter thresh and support_stability can not be set at the same time.
 #' @param max.iter is the maximum number of iterations to be performed for the optimization.
 #' @param intercept is a boolean value, which indicate whether intercept will be fitted. Default value is TRUE.
 #'

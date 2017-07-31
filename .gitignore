@@ -9,8 +9,6 @@ src-x64
 /MixedGraphs/src/symbols.rds
 MixedGraphs.Rcheck
 test
-/MixedGraphs/src/.Rhistory
 .Rhistory
 /man/*
 RcppExports.*
-NAMESPACE

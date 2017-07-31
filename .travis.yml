@@ -5,13 +5,12 @@ cache: packages
 sudo: false
 
 r_packages:
-  - devtools
-  - roxygen2
   - Rcpp
 
 before_install:
-  - Rscript -e 'install.packages("roxygen2"); roxygen2::roxygenize()'
-  - Rscript -e 'Rcpp::compileAttributes()'
+  - Rscript -e "install.packages(c('devtools','roxygen2','testthat'))"
+  - Rscript -e "devtools::install_deps()"
+  - Rscript -e "devtools::document()"
 
 r_build_args: --no-build-vignettes --no-manual --no-resave-data
 r_check_args: --no-build-vignettes --no-manual
