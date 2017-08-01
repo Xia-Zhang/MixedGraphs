@@ -36,8 +36,6 @@ public:
                  const arma::vec &o,
                  const arma::vec beta,
                  const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
-    arma::vec getGradient(const arma::vec &z);
-    arma::mat getHessianInv();
     void updateBeta(const arma::vec &z);
     ~ADMMLogistic(){};
 };
@@ -51,9 +49,6 @@ public:
                 const arma::vec &o,
                 const arma::vec beta,
                 const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
-    arma::vec getGradient(const arma::vec &z);
-    arma::mat getHessianInv();
-    arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
     ~ADMMPoisson(){};
 };
@@ -69,7 +64,6 @@ public:
                  const arma::vec &o,
                  const arma::vec beta,
                  const arma::vec z):ADMMSolver(X, y, o, beta, z) {}
-    arma::vec solve(const arma::vec &z);
     void updateBeta(const arma::vec &z);
     ~ADMMGaussian(){};
 };

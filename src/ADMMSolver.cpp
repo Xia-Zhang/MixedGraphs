@@ -22,57 +22,44 @@ void ADMMSolver::updateU(const arma::vec &z) {
     u = u + beta - z;
 }
 
-arma::vec ADMMLogistic::getGradient(const arma::vec &z) {
-    uint64_t n = X.n_rows;
-    arma::vec vecP(n);
+void ADMMLogistic::updateBeta(const arma::vec &z) {
+    uint64_t n = X.n_rows, p = X.n_cols;
+    double doubleP;
+    arma::vec vecP(n), gradient;
+    arma::mat W(n, n, arma::fill::zeros);
+
     for (uint64_t i = 0; i < n; i++) {
         vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
     }
-    return X.t() * (vecP - y) / n + beta - z + u;
-}
-
-arma::mat ADMMLogistic::getHessianInv() {
-    uint64_t n = X.n_rows, p = X.n_cols;
-    double doubleP;
-    arma::mat W(n, n, arma::fill::zeros);
+    gradient = X.t() * (vecP - y) / n + beta - z + u;
 
     for (uint64_t i = 0; i < n; i++) {
         doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
         W(i, i) = doubleP * (1 - doubleP);
     }
-    W /= n;
     if (XX.empty()) XX = X * X.t();
-    return arma::eye<arma::mat>(p, p) - X.t() * (W.i() + XX).i() * X;
+
+    if (n <= 2*p) beta = beta - gradient + X.t() * (arma::diagmat(1 / W.diag()) * n + XX).i() * X * gradient;
+    else beta = beta - arma::solve(arma::eye(p, p) + X.t() * W / n * X, gradient);
 }
 
-void ADMMLogistic::updateBeta(const arma::vec &z) {
-    beta = beta - getHessianInv() * getGradient(z);
-}
-
-arma::vec ADMMPoisson::getGradient(const arma::vec &z) {
-    uint64_t n = X.n_rows;
-    arma::vec vecV(n);
+void ADMMPoisson::updateBeta(const arma::vec &z) {
+    uint64_t n = X.n_rows, p = X.n_cols;
+    arma::vec vecV(n), gradient;
+    arma::mat W(n, n, arma::fill::zeros);
 
     for (uint64_t i = 0; i < n; i++) {
         vecV[i] = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    return X.t() * (vecV - y) / n + beta - z + u;
-}
-
-arma::mat ADMMPoisson::getHessianInv() {
-    uint64_t n = X.n_rows, p = X.n_cols;
-    arma::mat W(n, n, arma::fill::zeros);
+    gradient = X.t() * (vecV - y) / n + beta - z + u;
 
     for (uint64_t i = 0; i < n; i++) {
         W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
-    W /= n;
     if (XX.empty()) XX = X * X.t();
-    return arma::eye<arma::mat>(p, p) - X.t() * (W.i() + XX).i() * X;
-}
 
-void ADMMPoisson::updateBeta(const arma::vec &z) {
-    beta = beta - getHessianInv() * getGradient(z);
+    if (n <= 2*p) beta = beta - gradient + X.t() * (arma::diagmat(1 / W.diag()) * n + XX).i() * X * gradient;
+    else beta = beta - arma::solve(arma::eye(p, p) + X.t() * W / n * X, gradient);
 }
 
 void ADMMGaussian::updateBeta(const arma::vec &z) {

@@ -51,7 +51,15 @@ check_stop_criteria <- function(prev_beta, beta) {
 
 
 BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8, B = 200, doPar = TRUE, lasso.control = list(), ridge.control = list()) {
-    beta <- lapply(X, function(x){rep(0, ncol(x))})
+    beta <- lapply(X, function(x){
+        non_zero <- min(as.integer(0.2 * nrow(x)), ncol(x))
+        # non_zero <- 0
+        betak <- numeric(ncol(x))
+        print(non_zero)
+        if (non_zero > 0) betak[1 : non_zero] <- 1
+        sample(betak)
+    })
+    print(beta)
     scores <- vector("list", length = length(X))
     K <- length(X)
     n <- length(y)
