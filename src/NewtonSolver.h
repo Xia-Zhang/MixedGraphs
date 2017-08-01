@@ -47,8 +47,8 @@ public:
 
 class NewtonLogistic : public NewtonSolver{
 private:
-    arma::vec getGradient(const arma::vec &beta);
-    arma::mat getHessian(const arma::vec &beta);
+    arma::mat XX;
+    arma::vec getBetaUpdate(const arma::vec &beta);
 public:
     arma::vec solve();
     NewtonLogistic(const NewtonSolver &solver) : NewtonSolver(solver){};
@@ -57,8 +57,8 @@ public:
 
 class NewtonPoisson : public NewtonSolver{
 private:
-    arma::vec getGradient(const arma::vec &beta);
-    arma::mat getHessian(const arma::vec &beta);
+    arma::mat XX;
+    arma::vec getBetaUpdate(const arma::vec &beta);
 public:
     arma::vec solve();
     NewtonPoisson(const NewtonSolver &solver) : NewtonSolver(solver){};

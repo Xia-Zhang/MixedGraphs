@@ -55,7 +55,6 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
         non_zero <- min(as.integer(0.2 * nrow(x)), ncol(x))
         # non_zero <- 0
         betak <- numeric(ncol(x))
-        print(non_zero)
         if (non_zero > 0) betak[1 : non_zero] <- 1
         sample(betak)
     })

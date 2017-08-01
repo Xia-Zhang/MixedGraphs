@@ -27,8 +27,8 @@ test_that("Compare support set of glmLasso and glmnet, when set support_stabilit
     y <- rep(c(0, 1), 10)
 
     result_glmnet <- coef(glmnet(X, y, family = "binomial", standardize=FALSE, standardize.response=FALSE), s = 1)
-    result_ADMM <- glmLasso(X, y, family = "binomial", lambda = 1, support_stability = 20) $ Coef
-    expect_true(compare_supp(result_glmnet, result_ADMM))
+    result_lasso <- glmLasso(X, y, family = "binomial", lambda = 1, support_stability = 20) $ Coef
+    expect_true(compare_supp(result_glmnet, result_lasso))
 })
 
 test_that("Compare support set of glmLasso and glmnet, when set support_stability to 5 and family to poisson.", {
@@ -37,8 +37,8 @@ test_that("Compare support set of glmLasso and glmnet, when set support_stabilit
     X <- matrix(rnorm(n * p), n, p)
     y <- rpois(n, 3)
     result_glmnet <- coef(glmnet(X, y, family = "poisson", standardize=FALSE, standardize.response=FALSE), s = 0.5)
-    result_ADMM <- glmLasso(X, y, family = "poisson", lambda = 0.5) $ Coef
-    expect_true(compare_supp(result_glmnet, result_ADMM))
+    result_lasso <- glmLasso(X, y, family = "poisson", lambda = 0.5) $ Coef
+    expect_true(compare_supp(result_glmnet, result_lasso))
 })
 
 test_that("Compare support set of glmLasso and glmnet, when set support_stability to 5 and family to gaussian.", {
@@ -48,8 +48,8 @@ test_that("Compare support set of glmLasso and glmnet, when set support_stabilit
     y <- rnorm(n)
 
     result_glmnet <- coef(glmnet(X, y, family = "gaussian", standardize=FALSE, standardize.response=FALSE), s = 0.5)
-    result_ADMM <- glmLasso(X, y, family = "gaussian", lambda = 0.5) $ Coef
-    expect_true(compare_supp(result_glmnet, result_ADMM))
+    result_lasso <- glmLasso(X, y, family = "gaussian", lambda = 0.5) $ Coef
+    expect_true(compare_supp(result_glmnet, result_lasso))
 })
 
 test_that("Compare the glmLasso and glm, when set thresh to 0.1 and family to binomial.", {
@@ -59,9 +59,9 @@ test_that("Compare the glmLasso and glm, when set thresh to 0.1 and family to bi
     y <- rbinom(n, 1, 0.6)
 
     result_glm <- coef(glm(y ~ X, family = "binomial"))
-    result_ADMM <- glmLasso(X, y, family = "binomial", lambda = 0, thresh = 1e-6) $ Coef
+    result_lasso <- glmLasso(X, y, family = "binomial", lambda = 0, thresh = 1e-6) $ Coef
 
-    expect_true(compare_diff(result_glm, result_ADMM))
+    expect_true(compare_diff(result_glm, result_lasso))
 })
 
 test_that("Compare the glmLasso and glm, when set thresh to 0.1 and family to poisson.", {
@@ -71,8 +71,8 @@ test_that("Compare the glmLasso and glm, when set thresh to 0.1 and family to po
     y <- rpois(n, 3)
 
     result_glm <- coef(glm(y ~ X, family = "poisson"))
-    result_ADMM <- glmLasso(X, y, family = "poisson", lambda = 0, thresh = 1e-6) $ Coef
-    expect_true(compare_diff(result_glm, result_ADMM))
+    result_lasso <- glmLasso(X, y, family = "poisson", lambda = 0, thresh = 1e-6) $ Coef
+    expect_true(compare_diff(result_glm, result_lasso))
 })
 
 test_that("Compare the glmLasso and glm, when set thresh to 0.1 and family to gaussian.", {
@@ -82,6 +82,6 @@ test_that("Compare the glmLasso and glm, when set thresh to 0.1 and family to ga
     y <- rnorm(n)
 
     result_glm <- coef(glm(y ~ X, family = "gaussian"))
-    result_ADMM <- glmLasso(X, y, family = "gaussian", lambda = 0, thresh = 1e-6) $ Coef
-    expect_true(compare_diff(result_glm, result_ADMM))
+    result_lasso <- glmLasso(X, y, family = "gaussian", lambda = 0, thresh = 1e-6) $ Coef
+    expect_true(compare_diff(result_glm, result_lasso))
 })

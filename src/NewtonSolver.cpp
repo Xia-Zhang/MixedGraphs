@@ -71,29 +71,30 @@ void NewtonSolver::setLambda(const double lambda) {
     this->lambda = lambda;
 }
 
-arma::vec NewtonLogistic::getGradient(const arma::vec &beta) {
-    uint64_t n = X.n_rows;
-    arma::vec vecP(n), lambdaBeta;
+arma::vec NewtonLogistic::getBetaUpdate(const arma::vec &beta) {
+    uint64_t n = X.n_rows, p = X.n_cols;
+    double doubleP;
+    arma::vec vecP(n), lambdaBeta, gradient;
+    arma::mat W(n, n, arma::fill::zeros), lambdaI;
+
     for (uint64_t i = 0; i < n; i++) {
         vecP[i] = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
     }
     lambdaBeta = lambda * beta;
     if (intercept) lambdaBeta[0] = 0;
-    return X.t() * (vecP - y) / n + lambdaBeta;
-}
+    gradient = X.t() * (vecP - y) / n + lambdaBeta;
 
-arma::mat NewtonLogistic::getHessian(const arma::vec &beta) {
-    uint64_t n = X.n_rows, p = X.n_cols;
-    double doubleP;
-    arma::mat W(n, n, arma::fill::zeros), lambdaI;
-    
     for (uint64_t i = 0; i < n; i++) {
         doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
         W(i, i) = doubleP * (1 - doubleP);
     }
     lambdaI = lambda * arma::eye<arma::mat>(p, p);
     if (intercept) lambdaI(0, 0) = 0;
-    return X.t() * W * X / n + lambdaI;
+    if (XX.empty()) XX = X * X.t();
+
+    if (n <= 2 * p && !intercept)
+        return gradient - X.t() * (arma::diagmat(1 / W.diag()) * n + XX).i() * X * gradient;
+    else return arma::solve(X.t() * W * X / n + lambdaI, gradient);
 }
 
 arma::vec NewtonLogistic::solve() {
@@ -104,7 +105,7 @@ arma::vec NewtonLogistic::solve() {
     arma::vec beta, d_beta;
     beta = betaWS;
     while (k < maxIter) {
-        d_beta = arma::solve(getHessian(beta), getGradient(beta));
+        d_beta = getBetaUpdate(beta);
         beta = beta - d_beta;
         if (std::sqrt(sum(arma::square(d_beta))) < thresh) {
             break;
@@ -114,28 +115,28 @@ arma::vec NewtonLogistic::solve() {
     return beta;
 }
 
-arma::vec NewtonPoisson::getGradient(const arma::vec &beta) {
-    uint64_t n = X.n_rows;
-    arma::vec vecV(n), lambdaBeta;
+arma::vec NewtonPoisson::getBetaUpdate(const arma::vec &beta) {
+    uint64_t n = X.n_rows, p = X.n_cols;
+    arma::vec vecV(n), lambdaBeta, gradient;
+    arma::mat W(n, n, arma::fill::zeros), lambdaI;
 
     for (uint64_t i = 0; i < n; i++) {
         vecV[i] = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
     lambdaBeta = lambda * beta;
     if (intercept) lambdaBeta[0] = 0;
-    return X.t() * (vecV - y) / n + lambdaBeta;
-}
-
-arma::mat NewtonPoisson::getHessian(const arma::vec &beta) {
-    uint64_t n = X.n_rows, p = X.n_cols;
-    arma::mat W(n, n, arma::fill::zeros), lambdaI;
+    gradient = X.t() * (vecV - y) / n + lambdaBeta;
 
     for (uint64_t i = 0; i < n; i++) {
         W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
     }
     lambdaI = lambda * arma::eye<arma::mat>(p, p);
     if (intercept) lambdaI(0, 0) = 0;
-    return X.t() * W * X / n + lambdaI;
+    if (XX.empty()) XX = X * X.t();
+    
+    if (n <= 2 * p && !intercept)
+        return gradient - X.t() * (arma::diagmat(1 / W.diag()) * n + XX).i() * X * gradient;
+    else return arma::solve(X.t() * W * X / n + lambdaI, gradient);
 }
 
 arma::vec NewtonPoisson::solve() {
@@ -146,7 +147,7 @@ arma::vec NewtonPoisson::solve() {
     arma::vec beta, d_beta;
     beta = betaWS;
     while (k < maxIter) {
-        d_beta = arma::solve(getHessian(beta), getGradient(beta));
+        d_beta = getBetaUpdate(beta);
         beta = beta - d_beta;
         if ( std::sqrt(arma::as_scalar(d_beta.t() * d_beta)) < thresh) {
             break;
