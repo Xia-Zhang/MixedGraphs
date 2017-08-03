@@ -101,7 +101,7 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             scores[[k]] <- rowSums(abs(sign(betak_samples)))/B
             support_indexes <- which(scores[[k]] >= tau)
             if (length(support_indexes) == 0) {
-                support_indexes <- sample(pk, min(as.integer(0.2 * n), pk))
+                support_indexes <- sample(pk, max(min(as.integer(0.2 * n), as.integer(0.5 *pk)), 1))
             }
             # print("--------")
             # print("the support_indexes ")

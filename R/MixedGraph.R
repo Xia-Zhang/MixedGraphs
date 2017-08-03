@@ -50,7 +50,7 @@ produce_colors <- function(K) {
 #' X2 <- matrix(rnorm(12), nrow = 4)
 #' X <- list(X1, X2)
 #' crf_structure <- matrix(rep(1, 4), nrow = 2)
-#' brail_control <- list(B = 2, tau = 0.6)
+#' brail_control <- list(B = 5, tau = 0.6)
 #' MixedGraph(X, crf_structure, brail_control = brail_control)
 #'
 #' @importFrom foreach %dopar% %:%
