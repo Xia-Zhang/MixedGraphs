@@ -72,7 +72,6 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
     ncols <- sapply(X, ncol)
     size_list <- cumsum(c(1, ncols))
     indexes_mask <- matrix(unlist(sapply(1:K, function(i){
-        print(rep(rep(crf_structure[,i], ncols), ncols[i]))
         rep(rep(crf_structure[,i], ncols), ncols[i])
     })), nrow = p)
     diag(indexes_mask) <- 0

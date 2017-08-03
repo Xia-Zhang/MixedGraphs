@@ -1,26 +1,29 @@
 
-get_c <- function(X_k, beta_k, family) {
-    n <- nrow(X_k)
+get_c <- function(X, beta, family) {
+    n <- nrow(X)
     W <- matrix(0, nrow = n, ncol = n)
     if (family == "gaussian") {
         return(1.0)
     }
     else if(family == "binomial") {
         for (i in 1:n) {
-            tmp <- 1 /(1 + exp(-(X_k[i,] %*% beta_k)))
+            tmp <- 1 /(1 + exp(-(X[i,] %*% beta)))
             W[i, i] <- tmp * (1 - tmp) / n
         }
     }
     else if(family == "poisson") {
         for (i in 1:n) {
-            W[i, i] <- exp(X_k[i,] %*% beta_k) / n
+            W[i, i] <- exp(X[i,] %*% beta) / n
         }
     }
-    return(max(eigen(t(X_k) %*% W %*% X_k)$values) / max(eigen(t(X_k) %*% X_k)$values))
+    return(max(eigen(t(X) %*% W %*% X)$values) / max(eigen(t(X) %*% X)$values))
 }
 
 check_stop_criteria <- function(prev_beta, beta) {
     result <- mapply(function(a, b) {all(sign(a) == sign(b))}, prev_beta, beta)
+    # print("--------")
+    # print(prev_beta)
+    # print(beta)
     all(result)
 }
 
@@ -44,7 +47,7 @@ check_stop_criteria <- function(prev_beta, beta) {
 #' X <- list(X1, X2)
 #' BRAIL(X, y, family = "binomial", tau = 0.8, B = 200, doPar = TRUE, 
 #' lasso.control= list(support_stability = 10, max.iter = 1e6),
-#' ridge.control = list(lambda = 1, max.iter = 1e4, thresh = 1e-5))
+#' ridge.control = list(max.iter = 1e4, thresh = 1e-5))
 #'
 #' @importFrom foreach %dopar% %do%
 #' @export
@@ -56,9 +59,9 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
         # non_zero <- 0
         betak <- numeric(ncol(x))
         if (non_zero > 0) betak[1 : non_zero] <- 1
-        sample(betak)
+        # sample(betak)
+        betak
     })
-    print(beta)
     scores <- vector("list", length = length(X))
     K <- length(X)
     n <- length(y)
@@ -66,19 +69,23 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
     family <- match.arg(family)
     if (B <= 0) stop("Invailid B!")
 
+    times_count <- 1
     while (TRUE) {
         prev_beta <- beta
         for (k in 1 : K) {
+            # print("*****************")
+            # print(k)
             pk <- ncol(X[[k]])
             beta_norm0 <- sum(abs(sign(beta[[k]])))
-            c <- get_c(X[[k]], beta[[k]], family)
-            tmp_lambda <- c / n * norm(as.matrix(beta[[k]]), "2") * sqrt(log(pk) * beta_norm0)
-            lambda <- sapply(beta[[k]], function(x){if(x!=0) {tmp_lambda} else {2*tmp_lambda}})
+            #c <- get_c(X[[k]], beta[[k]], family)
+            c <- get_c(Reduce(cbind, X), Reduce(c, beta), family)
+            eta <- c / n * norm(as.matrix(beta[[k]]), "2") * sqrt(log(pk) * beta_norm0)
+            lambda <- ifelse(beta[[k]], eta, 2*eta)
 
             # Estimate support indexes, using foreach to parallelize the process
+            `%myfun%` <- ifelse(doPar, `%dopar%`, `%do%`)
             betak_samples  <- 
-            if (doPar) {
-                foreach::foreach(1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %dopar% {
+                foreach::foreach(1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %myfun% {
                     indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
                     sample_X <- lapply(X, function(x){x[indexes,]})
                     sample_y <- y[indexes]
@@ -89,35 +96,36 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
                                        init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
                     do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
                 }
-            }
-            else {
-                foreach::foreach(1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %do% {
-                    indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
-                    sample_X <- lapply(X, function(x){x[indexes,]})
-                    sample_y <- y[indexes]
-                    multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
-                    o <- rowSums(as.matrix(multi_tmp[, -k]))
-                    w <- lambda * runif(pk, 0.5, 1.5)
-                    lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w, 
-                                       init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
-                    do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
-                }
-            }
+            # print("The beta sample")
+            # print(betak_samples)
             scores[[k]] <- rowSums(abs(sign(betak_samples)))/B
             support_indexes <- which(scores[[k]] >= tau)
-
+            if (length(support_indexes) == 0) {
+                support_indexes <- sample(pk, min(as.integer(0.2 * n), pk))
+            }
+            # print("--------")
+            # print("the support_indexes ")
+            # print(support_indexes)
             # Estimate non-zero coefficients
             betak_support <- beta[[k]][support_indexes]
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
-            ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, beta.init = prev_beta[[k]][support_indexes], family = family)
+            ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, beta.init = prev_beta[[k]][support_indexes], family = family, lambda = 1e-4)
             sub_beta <- do.call(glmRidge_impl, c(ridge_argv, ridge.control))[-1]
-            beta[[k]] <- rep(0, length(beta[[k]]))
-            mapply(function(index, value){beta[[k]][index] <<- value}, support_indexes, sub_beta)
+
+            beta[[k]] <- numeric(length(beta[[k]]))
+            beta[[k]][support_indexes] <- sub_beta
+            # print("the beta")
+            # print(beta[[k]])
         }
+        # print("---------")
+        # if (times_count == 20) stop("jaj")
         if (check_stop_criteria(prev_beta, beta)) {
+            print("The iterator count:")
+            print(times_count)
             break
         }
+        times_count <- times_count + 1
     }
     return(list("coefficients" = beta, "scores" = scores))
 }
