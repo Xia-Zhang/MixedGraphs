@@ -21,9 +21,6 @@ get_c <- function(X, beta, family) {
 
 check_stop_criteria <- function(prev_beta, beta) {
     result <- mapply(function(a, b) {all(sign(a) == sign(b))}, prev_beta, beta)
-    # print("--------")
-    # print(prev_beta)
-    # print(beta)
     all(result)
 }
 
@@ -54,17 +51,15 @@ check_stop_criteria <- function(prev_beta, beta) {
 
 
 BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8, B = 200, doPar = TRUE, lasso.control = list(), ridge.control = list()) {
+    K <- length(X)
+    n <- length(y)
     beta <- lapply(X, function(x){
-        non_zero <- min(as.integer(0.2 * nrow(x)), ncol(x))
-        # non_zero <- 0
+        non_zero <- min(as.integer(0.2 * n), ncol(x))
         betak <- numeric(ncol(x))
         if (non_zero > 0) betak[1 : non_zero] <- 1
-        # sample(betak)
         betak
     })
     scores <- vector("list", length = length(X))
-    K <- length(X)
-    n <- length(y)
     family <- tolower(family)
     family <- match.arg(family)
     if (B <= 0) stop("Invailid B!")
@@ -73,8 +68,6 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
     while (TRUE) {
         prev_beta <- beta
         for (k in 1 : K) {
-            # print("*****************")
-            # print(k)
             pk <- ncol(X[[k]])
             beta_norm0 <- sum(abs(sign(beta[[k]])))
             #c <- get_c(X[[k]], beta[[k]], family)
@@ -86,7 +79,7 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             `%myfun%` <- ifelse(doPar, `%dopar%`, `%do%`)
             betak_samples  <- 
                 foreach::foreach(1:B, .combine = cbind, .inorder = FALSE, .packages='MixedGraphs') %myfun% {
-                    indexes <- sample(nrow(X[[k]]), size = nrow(X[[k]]), replace = TRUE)
+                    indexes <- sample(n, size = n, replace = TRUE)
                     sample_X <- lapply(X, function(x){x[indexes,]})
                     sample_y <- y[indexes]
                     multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
@@ -96,32 +89,22 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
                                        init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
                     do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
                 }
-            # print("The beta sample")
-            # print(betak_samples)
             scores[[k]] <- rowSums(abs(sign(betak_samples)))/B
             support_indexes <- which(scores[[k]] >= tau)
             if (length(support_indexes) == 0) {
                 support_indexes <- sample(pk, max(min(as.integer(0.2 * n), as.integer(0.5 *pk)), 1))
             }
-            # print("--------")
-            # print("the support_indexes ")
-            # print(support_indexes)
-            # Estimate non-zero coefficients
+
             betak_support <- beta[[k]][support_indexes]
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
             ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, beta.init = prev_beta[[k]][support_indexes], family = family, lambda = 1e-4)
             sub_beta <- do.call(glmRidge_impl, c(ridge_argv, ridge.control))[-1]
-
-            beta[[k]] <- numeric(length(beta[[k]]))
+            beta[[k]] <- numeric(pk)
             beta[[k]][support_indexes] <- sub_beta
-            # print("the beta")
-            # print(beta[[k]])
         }
-        # print("---------")
-        # if (times_count == 20) stop("jaj")
         if (check_stop_criteria(prev_beta, beta)) {
-            print("The iterator count:")
+            print("The total loops in BRAIL:")
             print(times_count)
             break
         }

@@ -82,6 +82,9 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
         foreach::foreach(i = 1:ncol(X[[k]])) %dopar% {
             crf_k <- crf_structure[,k]
             block_indexes <- which(crf_k == 1)
+            if (length(block_indexes)==0) {
+                return(list(coef = rep(0, p), score = rep(0, p)))
+            }
             brail_X <- X[block_indexes]
             index_k <- match(k, block_indexes) # whether block has undirected edges
             if (is.na(index_k) == FALSE) {
@@ -139,8 +142,9 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
 #' G <- MixedGraph(X, crf_structure, brail_control = brail_control)
 #' plot(G, method = "igraph", weighted = TRUE)
 #' 
-#' @importFrom grDevices dev.off pdf rainbow
 #' @importFrom graphics plot
+#' @import igraph
+#' @import grDevices
 #' @import htmlwidgets
 #' @export
 
@@ -150,6 +154,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     method <- match.arg(method)
     K <- length(x$data)
     size_list <- cumsum(c(1, sapply(x$data, ncol)))
+    p <- ncol(x$network)
 
     colors <- produce_colors(K)
     graph_color <- as.vector(sapply(seq_along(x$data), function(i){
@@ -177,7 +182,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     undirected_network <- (undirected_network + base::t(undirected_network)) / 2
 
     ids <- 1 : length(graph_color)
-    labelnames <- ids
+    labelnames <- NA
     if (!is.null(colnames(x$data[[1]]))) {
         labelnames <- as.vector(sapply(x$data, function(x) {
             colnames(x)
@@ -186,40 +191,47 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
 
     if (method == "igraph") {
         argv_list <- list(...)
-        directed_graph <- igraph::graph.adjacency(directed_network, weighted = TRUE, mode = "directed")
-        igraph::V(directed_graph)$name <- ids
-        directed_arrow_size <- 0.5
+        directed_graph <- graph.adjacency(directed_network, weighted = TRUE, mode = "directed")
+        V(directed_graph)$name <- ids
+        directed_arrow_size <- 0.3
         if ("arrow.size" %in% names(argv_list)) {         
             directed_arrow_size <- argv_list["arrow.size"]
             argv_list["arrow.size"] <- NULL  
         }
 
-        undirected_graph <- igraph::graph.adjacency(undirected_network, weighted = TRUE, mode = "directed")
-        igraph::V(undirected_graph)$name <- ids
-        edge_start <- igraph::ends(undirected_graph, es=igraph::E(undirected_graph), names=F)[,1]
-        undirected_edge_color <- graph_color[edge_start]
+        undirected_graph <- graph.adjacency(undirected_network, weighted = TRUE, mode = "directed")
+        V(undirected_graph)$name <- ids
+        # undirected edge color using start node color, and darker the color
+        edge_start <- ends(undirected_graph, es=E(undirected_graph), names=F)[,1]
+        undirected_edge_color <- rgb(t(col2rgb(graph_color[edge_start])/ 1.2), maxColorValue=255)
 
         if(weighted){
-            igraph::E(directed_graph)$width <- 0.5 + abs(igraph::E(directed_graph)$weight)
-            igraph::E(undirected_graph)$width <- 0.5 + abs(igraph::E(undirected_graph)$weight)
+            E(directed_graph)$width <- 0.5 + abs(E(directed_graph)$weight)
+            E(undirected_graph)$width <- 0.5 + abs(E(undirected_graph)$weight)
         }
-        argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames))
+        argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames, 
+                                       vertex.size = 20 / as.integer(vcount(directed_graph)/100 + 1) ))
 
         if (!"layout" %in% names(argv_list)) {
-            layout <- igraph::layout.graphopt(directed_graph)
+            weight_network <- matrix(1, p, p)
+            sapply(1:K, function(i) {
+                indexes <- size_list[i] : (size_list[i + 1] - 1)
+                weight_network[indexes, indexes] <<- 10})
+            weight_graph <- graph.adjacency(weight_network, weighted = TRUE)
+            layout <- layout.fruchterman.reingold(weight_graph, weights=E(weight_graph)$weight)
             argv_list <- c(argv_list, list(layout = layout))
         }
 
         if(is.null(out.file) == FALSE){
             pdf(out.file)
-            do.call(igraph::plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
-            do.call(igraph::plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0), argv_list))
+            do.call(plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
+            do.call(plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0), argv_list))
             dev.off()
             cat(paste("Output file: ", out.file, "\n", sep=""))
         }
         else {
-            do.call(igraph::plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
-            do.call(igraph::plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0, edge.color = undirected_edge_color), argv_list))
+            do.call(plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
+            do.call(plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0, edge.color = undirected_edge_color), argv_list))
         }
     }
     else if (method == "cytoscape") {
