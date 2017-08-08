@@ -33,10 +33,7 @@ void ADMMLogistic::updateBeta(const arma::vec &z) {
     }
     gradient = X.t() * (vecP - y) / n + beta - z + u;
 
-    for (uint64_t i = 0; i < n; i++) {
-        doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
-        W(i, i) = doubleP * (1 - doubleP);
-    }
+    W.diag() = vecP % (1 - vecP);
     if (XX.empty()) XX = X * X.t();
 
     if (n <= 2*p) beta = beta - gradient + X.t() * (arma::diagmat(1 / W.diag()) * n + XX).i() * X * gradient;
@@ -53,9 +50,7 @@ void ADMMPoisson::updateBeta(const arma::vec &z) {
     }
     gradient = X.t() * (vecV - y) / n + beta - z + u;
 
-    for (uint64_t i = 0; i < n; i++) {
-        W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-    }
+    W.diag() = vecV;
     if (XX.empty()) XX = X * X.t();
 
     if (n <= 2*p) beta = beta - gradient + X.t() * (arma::diagmat(1 / W.diag()) * n + XX).i() * X * gradient;

@@ -84,10 +84,7 @@ arma::vec NewtonLogistic::getBetaUpdate(const arma::vec &beta) {
     if (intercept) lambdaBeta[0] = 0;
     gradient = X.t() * (vecP - y) / n + lambdaBeta;
 
-    for (uint64_t i = 0; i < n; i++) {
-        doubleP = 1 / (1 + exp(-(o[i] + arma::as_scalar(X.row(i) * beta))));
-        W(i, i) = doubleP * (1 - doubleP);
-    }
+    W.diag() = vecP % (1 - vecP);
     lambdaI = lambda * arma::eye<arma::mat>(p, p);
     if (intercept) lambdaI(0, 0) = 0;
     if (XX.empty()) XX = X * X.t();
@@ -127,9 +124,7 @@ arma::vec NewtonPoisson::getBetaUpdate(const arma::vec &beta) {
     if (intercept) lambdaBeta[0] = 0;
     gradient = X.t() * (vecV - y) / n + lambdaBeta;
 
-    for (uint64_t i = 0; i < n; i++) {
-        W(i, i) = exp(o[i] + arma::as_scalar(X.row(i) * beta));
-    }
+    W.diag() = vecV;
     lambdaI = lambda * arma::eye<arma::mat>(p, p);
     if (intercept) lambdaI(0, 0) = 0;
     if (XX.empty()) XX = X * X.t();
