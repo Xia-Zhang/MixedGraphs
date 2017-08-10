@@ -40,7 +40,10 @@ HTMLWidgets.widget({
                 'target-arrow-shape': function(ele) { return ele.data('directed') ? 'triangle' : 'none' },
                 'source-arrow-shape': 'none',
                 'width': function(ele) { return ele.data('weight') ? Math.abs(ele.data('weight') * 10) : 5 },
-                'line-color': '#aaaaaa'
+                'line-color': '#aaaaaa',
+                'shape': 'roundrectangle',
+                'background-color': '#ccc',
+                'background-opacity': 0.333,
               }
             }
           ],
