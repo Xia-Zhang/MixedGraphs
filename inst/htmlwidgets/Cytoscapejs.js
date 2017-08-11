@@ -12,10 +12,7 @@ HTMLWidgets.widget({
         for (var node of x.nodes) {
           node.data.color = node.data.color.substring(0, 7);
         }
-        for (var edge of x.edges) {
-          edge.data.directed = (Math.random() > 0.5)
-        }
-
+        
         cytoscape({
           container: el,
 

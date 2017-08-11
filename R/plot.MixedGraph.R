@@ -4,6 +4,9 @@ darken_color <- function(color) {
 }
 
 produce_colors <- function(K, node = TRUE) {
+    colors <- rainbow(K)
+    print(colors <- rainbow(K))
+    
     node_colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
     edge_colors <- node_colors
     colors <- node_colors
@@ -156,31 +159,33 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
 
         # set edge type attributes
         g <- initEdgeAttribute (graph = g,  attribute.name = 'edgeType',
-                                attribute.type ='integer',
-                                default.value = 0)
+                                attribute.type ='char',
+                                default.value = "undefined")
         g <- initEdgeAttribute (graph = g,  attribute.name = 'weight',
                                 attribute.type ='numeric',
                                 default.value = 0)
         undirected_indexes <- which(undirected_network != 0, arr.ind = T)
+        print(undirected_indexes)
         for (i in 1 : nrow(undirected_indexes)) {
             node <- formatC(undirected_indexes[i,"row"])
             group <- graph::nodeData(g, node, 'group')
-            graph::edgeData(g, from = node, to = formatC(undirected_indexes[i,"col"]), 'edgeType') <- group
+            print(group)
+            graph::edgeData(g, from = node, to = formatC(undirected_indexes[i,"col"]), 'edgeType') <- paste("Type", group, sep = "")
         }
 
         # display cytoscape windows
         cw <- CytoscapeWindow ('test', graph = g, overwriteWindow = TRUE)
         displayGraph(cw)
+        layoutNetwork(cw, layout.name = "attributes-layout")
         
         # set rules
         setDefaultNodeShape (cw, 'ELLIPSE')
         setDefaultNodeSize  (cw, 35)
         setDefaultNodeFontSize (cw, 10)
-        layoutNetwork(cw, layout.name = "attributes-layout")
         setNodeColorRule(cw, 'group', c(1 : K), produce_colors(K), mode = 'lookup')
-        setEdgeTargetArrowRule(cw, 'edgeType', c(1 : K), rep('None', K), default = 'Arrow')
-        setEdgeTargetArrowColorRule(cw, 'edgeType', c(1 : K), produce_colors(K, FALSE), mode = 'lookup')
-        setEdgeColorRule(cw, 'edgeType', c(1 : K), produce_colors(K, FALSE), mode  = 'lookup', default.color='#000000')
+        setEdgeTargetArrowRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), rep('None', K), default = 'Arrow')
+        setEdgeTargetArrowColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), produce_colors(K, FALSE), mode = 'lookup')
+        setEdgeColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), produce_colors(K, FALSE), mode  = 'lookup', default.color = '#000000')
     }
     else if (method == "cytoscape.js") {
         nodes <- data.frame(id = ids, name = labelnames, color = graph_color)
