@@ -5,25 +5,25 @@ darken_color <- function(color) {
 
 produce_colors <- function(K, node = TRUE) {
     colors <- rainbow(K)
-    print(colors <- rainbow(K))
+    substr(colors, start = 1, stop = 7)
     
-    node_colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
-    edge_colors <- node_colors
-    colors <- node_colors
-    if (!node) {
-        colors <- edge_colors
-    }
-    if (K > length(node_colors)) {
-        extra_color <- rainbow(K - 12, alpha=.8)
-        if (node) {
-            colors <- c(node_colors, extra_color)
-        }
-        else {
-            extra_color <- vapply(extra_color, darken_color)
-            colors <- c(edge_colors, extra_color)
-        }
-    }
-    colors[1 : K]
+    #node_colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
+    # edge_colors <- node_colors
+    # colors <- node_colors
+    # if (!node) {
+    #     colors <- edge_colors
+    # }
+    # if (K > length(node_colors)) {
+    #     extra_color <- rainbow(K - 12, alpha=.8)
+    #     if (node) {
+    #         colors <- c(node_colors, extra_color)
+    #     }
+    #     else {
+    #         extra_color <- vapply(extra_color, darken_color)
+    #         colors <- c(edge_colors, extra_color)
+    #     }
+    # }
+    # colors[1 : K]
 }
 
 #' Plot the graph from MixedGraph object.
@@ -115,22 +115,24 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
             E(undirected_graph)$width <- 0.5 + abs(E(undirected_graph)$weight)
         }
         argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames, 
-                                       vertex.size = 20 / as.integer(vcount(directed_graph)/100 + 1) ))
+                                       vertex.size = 30 / as.integer(vcount(directed_graph)/100 + 1) ))
 
         if (!"layout" %in% names(argv_list)) {
-            weight_network <- matrix(1, p, p)
+            weight_network <- matrix(0, p, p)
+            weight_network[directed_network != 0] <- 1
             sapply(1:K, function(i) {
                 indexes <- size_list[i] : (size_list[i + 1] - 1)
-                weight_network[indexes, indexes] <<- 10})
+                weight_network[indexes, indexes] <<- 1})
             weight_graph <- graph.adjacency(weight_network, weighted = TRUE)
             layout <- layout.fruchterman.reingold(weight_graph, weights=E(weight_graph)$weight)
+            # layout <- layout.fruchterman.reingold(weight_graph, weights =E(weight_graph)$weight)
             argv_list <- c(argv_list, list(layout = layout))
         }
 
         if(is.null(out.file) == FALSE){
             pdf(out.file)
             do.call(plot.igraph, c(list(x = directed_graph, edge.arrow.size = directed_arrow_size), argv_list))
-            do.call(plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0), argv_list))
+            do.call(plot.igraph, c(list(x = undirected_graph, add = T, edge.arrow.size = 0, edge.color = undirected_edge_color), argv_list))
             dev.off()
             cat(paste("Output file: ", out.file, "\n", sep=""))
         }
@@ -186,6 +188,15 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         setEdgeTargetArrowRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), rep('None', K), default = 'Arrow')
         setEdgeTargetArrowColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), produce_colors(K, FALSE), mode = 'lookup')
         setEdgeColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), produce_colors(K, FALSE), mode  = 'lookup', default.color = '#000000')
+
+        if(is.null(out.file) == FALSE) {
+            if (nchar(out.file) < 4) stop("Out.file should match one of the type c('png', 'pdf', 'svg')")
+            image_type <- substr(out.file, nchar(out.file) - 2, nchar(out.file))
+            file_name <- substr(out.file, 1, nchar(out.file) - 4)
+            match.arg(image_type, c("png", "pdf", "svg"))
+            redraw (cw)
+            saveImage(cw, file_name, image.type = image_type)
+        }
     }
     else if (method == "cytoscape.js") {
         nodes <- data.frame(id = ids, name = labelnames, color = graph_color)
@@ -214,6 +225,14 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
             list(data = as.list(x))
         })
         cy <- list(nodes = node_entries, edges = edges_entries)
-        Cytoscapejs(cy)
+
+        # save file
+        if(is.null(out.file) == FALSE) {
+            htmlwidgets::saveWidget(Cytoscapejs(cy), file = out.file, selfcontained = TRUE)
+            cat(paste("Output file: ", out.file, "\n", sep=""))
+        }
+        else {
+            Cytoscapejs(cy)
+        }
     }
 }
