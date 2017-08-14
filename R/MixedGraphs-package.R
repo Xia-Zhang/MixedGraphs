@@ -14,8 +14,8 @@
 #' X1 <- matrix(rnorm(12), nrow = 4)
 #' X2 <- matrix(rnorm(12), nrow = 4)
 #' X <- list(X1, X2)
-#' crf_structure <- matrix(rep(1, 4), nrow = 2)
-#' brail_control <- list(B = 10)
+#' crf_structure <- matrix(c(1, 1, 0, 1), nrow = 2)
+#' brail_control <- list(B = 5, tau = 0.6)
 #' MixedGraph(X, crf_structure, brail_control = brail_control)
 #' 
 #' @useDynLib MixedGraphs

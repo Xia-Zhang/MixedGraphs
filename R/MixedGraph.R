@@ -17,6 +17,34 @@ guess_family <- function(X) {
     }
 }
 
+have_cycle <- function(crf_structure, i, j) {
+    crf_structure[i, j] <- -1
+    if (any(crf_structure[j,] == -1)) return(TRUE)
+    to_nodes <- which(crf_structure[j,] != 0)
+    for (node in to_nodes) {
+        if (have_cycle(crf_structure, j, node)) return(TRUE)
+    }
+    return(FALSE)
+}
+
+check_DAG <- function(crf_structure) {
+    diag(crf_structure) <- 0;
+    K <- nrow(crf_structure)
+    if (any(crf_structure & t(crf_structure) != 0)) {
+        return(FALSE)
+    }
+    # DFS
+    for (i in 1 : K)
+        for (j in 1 : K){
+            if (as.integer(crf_structure[i, j]) == 1) {
+                if (have_cycle(crf_structure, i, j)) {
+                    return(FALSE)
+                }
+            }
+    }
+    return(TRUE)
+}
+
 #' MixedGraph is used to fit mixed graph model.
 #'
 #' @param X is a list containing k matrices, each of the matrices has n rows and pk columns. They are the 'blocks'. Each block should have all columns of the same type.
@@ -43,7 +71,7 @@ guess_family <- function(X) {
 #' X1 <- matrix(rnorm(12), nrow = 4)
 #' X2 <- matrix(rnorm(12), nrow = 4)
 #' X <- list(X1, X2)
-#' crf_structure <- matrix(rep(1, 4), nrow = 2)
+#' crf_structure <- matrix(c(1, 1, 0, 1), nrow = 2)
 #' brail_control <- list(B = 5, tau = 0.6)
 #' MixedGraph(X, crf_structure, brail_control = brail_control)
 #'
@@ -62,6 +90,9 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
     }
     rule <- toupper(rule)
     rule <- match.arg(rule)
+    if(check_DAG(crf_structure) == FALSE) {
+        stop("The crf_structure is not a DAG!")
+    }
 
     ncols <- sapply(X, ncol)
     size_list <- cumsum(c(1, ncols))

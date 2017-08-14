@@ -6,24 +6,6 @@ darken_color <- function(color) {
 produce_colors <- function(K, node = TRUE) {
     colors <- rainbow(K)
     substr(colors, start = 1, stop = 7)
-    
-    #node_colors <- c("#8dd3c7", "#fb8072", "#ffffb3", "#bebada", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f")
-    # edge_colors <- node_colors
-    # colors <- node_colors
-    # if (!node) {
-    #     colors <- edge_colors
-    # }
-    # if (K > length(node_colors)) {
-    #     extra_color <- rainbow(K - 12, alpha=.8)
-    #     if (node) {
-    #         colors <- c(node_colors, extra_color)
-    #     }
-    #     else {
-    #         extra_color <- vapply(extra_color, darken_color)
-    #         colors <- c(edge_colors, extra_color)
-    #     }
-    # }
-    # colors[1 : K]
 }
 
 #' Plot the graph from MixedGraph object.
@@ -41,8 +23,8 @@ produce_colors <- function(K, node = TRUE) {
 #' X1 <- matrix(rnorm(12), nrow = 4)
 #' X2 <- matrix(rnorm(12), nrow = 4)
 #' X <- list(X1, X2)
-#' crf_structure <- matrix(rep(1, 4), nrow = 2)
-#' brail_control <- list(B = 2, tau = 0.6)
+#' crf_structure <- matrix(c(1, 1, 0, 1), nrow = 2)
+#' brail_control <- list(B = 5, tau = 0.6)
 #' G <- MixedGraph(X, crf_structure, brail_control = brail_control)
 #' plot(G, method = "igraph", weighted = TRUE)
 #' 
