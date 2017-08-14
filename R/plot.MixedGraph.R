@@ -13,11 +13,16 @@ produce_colors <- function(K, node = TRUE) {
 #' @method plot MixedGraph 
 #'
 #' @param x is a MixedGraph object.
-#' @param method is the package or the return type used in the function. When is "igraph", use the package "igraph". When is "cytoscape", record the network of graph modeling language (GML) format, which can be imported in cytoscape.Or we can use the R package RCytoscape. I haven't decided now.
+#' @param method is the package or the return type used in the function. When is "igraph", use the package "igraph". When is "cytoscape", record the network of graph modeling language (GML) format, which can be imported in cytoscape. Or we can use the R package RCytoscape. I haven't decided now.
 #' @param weighted is a boolean value, which indicate if we would plot the width of edge according to the weight of edge.
 #' @param stability is the stability threshold, more than it indicate the coefficient between the two vertices can be trusted. 
 #' @param out.file is the file name to save the plot of MixedGraph object. The default value is NULL, and the graph will be plotted to the screen.
-#' @param ... other generic arguments for plot method
+#' @param ... other arguments for different methods
+#' \itemize{
+#' \item{igraph}{the generic arguments for plot.igraph is available.}
+#' \item{cytoscape}{layout: the names should be in RCy3::getLayoutNames(CytoscapeWindow), the default layout is "attributes-layout". And you can also modify the layout throungh Cytoscape software.}
+#' \item{cytoscape.js}{To be extend}
+#' }
 #'
 #' @examples
 #' X1 <- matrix(rnorm(12), nrow = 4)
@@ -149,18 +154,26 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
                                 attribute.type ='numeric',
                                 default.value = 0)
         undirected_indexes <- which(undirected_network != 0, arr.ind = T)
-        print(undirected_indexes)
         for (i in 1 : nrow(undirected_indexes)) {
             node <- formatC(undirected_indexes[i,"row"])
             group <- graph::nodeData(g, node, 'group')
-            print(group)
             graph::edgeData(g, from = node, to = formatC(undirected_indexes[i,"col"]), 'edgeType') <- paste("Type", group, sep = "")
         }
 
         # display cytoscape windows
         cw <- CytoscapeWindow ('test', graph = g, overwriteWindow = TRUE)
         displayGraph(cw)
-        layoutNetwork(cw, layout.name = "attributes-layout")
+        argv_list <- list(...)
+        if ("layout" %in% names(argv_list)) {
+            if (!argv_list["layout"] %in% getLayoutNames(cw)) {
+                stop("The input layout not in getLayoutNames(CytoscapeWindow)!")
+            }
+            layout <- argv_list["layout"]
+        }
+        else {
+            layout <- "attributes-layout"
+        }
+        layoutNetwork(cw, layout.name = layout)
         
         # set rules
         setDefaultNodeShape (cw, 'ELLIPSE')

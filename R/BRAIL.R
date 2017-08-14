@@ -104,8 +104,6 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             beta[[k]][support_indexes] <- sub_beta
         }
         if (check_stop_criteria(prev_beta, beta)) {
-            print("The total loops in BRAIL:")
-            print(times_count)
             break
         }
         times_count <- times_count + 1
