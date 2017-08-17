@@ -3,21 +3,23 @@ darken_color <- function(color) {
     rgb(t(col2rgb(color)/ 1.2), maxColorValue=255)
 }
 
-produce_colors <- function(K, node = TRUE) {
+produce_colors <- function(K) {
     colors <- rainbow(K)
     substr(colors, start = 1, stop = 7)
 }
 
-#' Plot the graph from MixedGraph object.
-#' 
+#' Plot function for S3 class "MixedGraph"
+#'
+#' @description Plot the graph of MixedGraph object using igraph, cytoscape and cytpscape.js.
+#'
 #' @method plot MixedGraph 
 #'
 #' @param x is a MixedGraph object.
-#' @param method is the package or the return type used in the function. When is "igraph", use the package "igraph". When is "cytoscape", record the network of graph modeling language (GML) format, which can be imported in cytoscape. Or we can use the R package RCytoscape. I haven't decided now.
-#' @param weighted is a boolean value, which indicate if we would plot the width of edge according to the weight of edge.
-#' @param stability is the stability threshold, more than it indicate the coefficient between the two vertices can be trusted. 
+#' @param method is the related package or lib used in the function. When "igraph", the function will use the R package "igraph". When "cytoscape", the function will use the R package RCy3, the user should start the Cytoscape software before call the function. And when "cytoscape.js", the function will use the lib cytoscape.js.
+#' @param weighted is a boolean value, which indicates if we would plot the width of edge according to the weight of edge.
+#' @param stability is the stability threshold, when the stability score of the edge is more than it means the coefficient between the two vertices can be trusted. 
 #' @param out.file is the file name to save the plot of MixedGraph object. The default value is NULL, and the graph will be plotted to the screen.
-#' @param ... other arguments for different methods
+#' @param ... other arguments for different methods.
 #' \itemize{
 #' \item{igraph}{the generic arguments for plot.igraph is available.}
 #' \item{cytoscape}{layout: the names should be in RCy3::getLayoutNames(CytoscapeWindow), the default layout is "attributes-layout". And you can also modify the layout throungh Cytoscape software.}
@@ -32,7 +34,7 @@ produce_colors <- function(K, node = TRUE) {
 #' brail_control <- list(B = 5, tau = 0.6)
 #' G <- MixedGraph(X, crf_structure, brail_control = brail_control)
 #' plot(G, method = "igraph", weighted = TRUE)
-#' 
+#'
 #' @importFrom graphics plot
 #' @import igraph
 #' @import grDevices
@@ -48,12 +50,14 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     size_list <- cumsum(c(1, sapply(x$data, ncol)))
     p <- ncol(x$network)
 
+    # produce color list
     colors <- produce_colors(K)
     graph_color <- as.vector(sapply(seq_along(x$data), function(i){
         rep(colors[i], ncol(x$data[[i]]))
     }))
     graph_color <- unlist(graph_color)
 
+    # construct the directed network
     network <- x$network
     indexes <- (x$stability >= stability)
     network[!indexes] <- 0
@@ -63,6 +67,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         directed_network[indexes, indexes] <<- 0
     })
 
+    # construct the undirected network
     undirected_network <- network
     undirected_network[directed_network!=0] <- 0.0
     if (x$rule == "AND") {
@@ -73,6 +78,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     }
     undirected_network <- (undirected_network + base::t(undirected_network)) / 2
 
+    # set the ids and get the label names from the input data
     ids <- 1 : length(graph_color)
     labelnames <- NA
     if (!is.null(colnames(x$data[[1]]))) {
@@ -82,6 +88,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
     }
 
     if (method == "igraph") {
+        # set the arrow size of directed edges
         argv_list <- list(...)
         directed_graph <- graph.adjacency(directed_network, weighted = TRUE, mode = "directed")
         V(directed_graph)$name <- ids
@@ -91,12 +98,13 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
             argv_list["arrow.size"] <- NULL  
         }
 
+        # set the color of undirected edges
         undirected_graph <- graph.adjacency(undirected_network, weighted = TRUE, mode = "directed")
         V(undirected_graph)$name <- ids
-        # undirected edge color using start node color, and darker the color
         edge_start <- ends(undirected_graph, es=E(undirected_graph), names=F)[,1]
-        undirected_edge_color <- darken_color(graph_color[edge_start])
+        undirected_edge_color <- graph_color[edge_start]
 
+        # set the edge width according the edge weight
         if(weighted){
             E(directed_graph)$width <- 0.5 + abs(E(directed_graph)$weight)
             E(undirected_graph)$width <- 0.5 + abs(E(undirected_graph)$weight)
@@ -104,6 +112,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         argv_list <- c(argv_list, list(vertex.color = graph_color, vertex.label = labelnames, 
                                        vertex.size = 30 / as.integer(vcount(directed_graph)/100 + 1) ))
 
+        # if user didn't set the layout, set the default layout
         if (!"layout" %in% names(argv_list)) {
             weight_network <- matrix(0, p, p)
             weight_network[directed_network != 0] <- 1
@@ -112,7 +121,6 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
                 weight_network[indexes, indexes] <<- 1})
             weight_graph <- graph.adjacency(weight_network, weighted = TRUE)
             layout <- layout.fruchterman.reingold(weight_graph, weights=E(weight_graph)$weight)
-            # layout <- layout.fruchterman.reingold(weight_graph, weights =E(weight_graph)$weight)
             argv_list <- c(argv_list, list(layout = layout))
         }
 
@@ -146,7 +154,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
             graph::nodeData(g, node, 'group') <- index - 1
         }
 
-        # set edge type attributes
+        # set edge type attribute
         g <- initEdgeAttribute (graph = g,  attribute.name = 'edgeType',
                                 attribute.type ='char',
                                 default.value = "undefined")
@@ -179,10 +187,10 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         setDefaultNodeShape (cw, 'ELLIPSE')
         setDefaultNodeSize  (cw, 35)
         setDefaultNodeFontSize (cw, 10)
-        setNodeColorRule(cw, 'group', c(1 : K), produce_colors(K), mode = 'lookup')
+        setNodeColorRule(cw, 'group', c(1 : K), colors, mode = 'lookup')
         setEdgeTargetArrowRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), rep('None', K), default = 'Arrow')
-        setEdgeTargetArrowColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), produce_colors(K, FALSE), mode = 'lookup')
-        setEdgeColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), produce_colors(K, FALSE), mode  = 'lookup', default.color = '#000000')
+        setEdgeTargetArrowColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), colors, mode = 'lookup')
+        setEdgeColorRule(cw, 'edgeType', paste('Type', c(1 : K), sep = ""), colors, mode  = 'lookup', default.color = '#000000')
 
         if(is.null(out.file) == FALSE) {
             if (nchar(out.file) < 4) stop("Out.file should match one of the type c('png', 'pdf', 'svg')")
@@ -194,6 +202,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         }
     }
     else if (method == "cytoscape.js") {
+        # set node entries
         nodes <- data.frame(id = ids, name = labelnames, color = graph_color)
         node_entries <- apply(nodes, 1, function(x) {
             x[1] = trimws(x[1])
@@ -201,6 +210,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
             list(data = as.list(x))
         })
 
+        # set edge entries
         directed_indexes <- which(directed_network != 0, arr.ind=T)
         undirected_network[lower.tri(undirected_network)] <- 0
         undirected_indexes <- which(undirected_network != 0, arr.ind=T)

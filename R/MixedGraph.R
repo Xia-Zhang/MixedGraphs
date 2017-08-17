@@ -45,7 +45,9 @@ check_DAG <- function(crf_structure) {
     return(TRUE)
 }
 
-#' MixedGraph is used to fit mixed graph model.
+#' Mixed graph model estimate.
+#'
+#' @description MixedGraph is the main function of the package, it uses the BRAIL to do the regression.
 #'
 #' @param X is a list containing k matrices, each of the matrices has n rows and pk columns. They are the 'blocks'. Each block should have all columns of the same type.
 #' @param crf_structure is a K-by-K matrix giving the structure of the CRF
@@ -67,6 +69,8 @@ check_DAG <- function(crf_structure) {
 #'  \item{stability}{ is a p * p (sparse) matrix giving the stability scores}
 #'  \item{rule}{"AND" or "OR" rule for edge selection within blocks}
 #'
+#' @note The function supports foreach package, so user can register the backend.
+#' 
 #' @examples
 #' X1 <- matrix(rnorm(12), nrow = 4)
 #' X2 <- matrix(rnorm(12), nrow = 4)
@@ -129,6 +133,7 @@ MixedGraph <-function(X, crf_structure, family = NULL, rule = c("AND", "OR"), br
             list(coef = coef, score = score)
         }
 
+    # construct the S3 object "MixedGraph"
     result <- list()
     result$data <- X
     result$network <- matrix(unlist(sapply(graph_list, function(x) {

@@ -24,11 +24,13 @@ check_stop_criteria <- function(prev_beta, beta) {
     all(result)
 }
 
-#' BRAIL is Block-Randomized Adaptive Iterative Lasso
+#' Block-Randomized Adaptive Iterative Lasso
+#'
+#' @description Block-Randomized Adaptive Iterative Lasso
 #'
 #' @param X is a list containing k matrices, each of the matrices has n rows. They are the 'blocks'.
 #' @param y is the response vector of length n.
-#' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
+#' @param family is a description of the error distribution and link function to be used in the model. In our package, the character string can be "binomial", "gaussian" or "poisson".
 #' @param tau is the stability cut-off, which is used for choosing the support features in each block.
 #' @param B is the number of bootstraps in each iteration.
 #' @param doPar is logical value to indicate if the process should be run parallelly by foreach, if FALSE, the doPar will be disabled. The default value is TRUE.
@@ -64,13 +66,11 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
     family <- match.arg(family)
     if (B <= 0) stop("Invailid B!")
 
-    times_count <- 1
     while (TRUE) {
         prev_beta <- beta
         for (k in 1 : K) {
             pk <- ncol(X[[k]])
             beta_norm0 <- sum(abs(sign(beta[[k]])))
-            #c <- get_c(X[[k]], beta[[k]], family)
             c <- get_c(Reduce(cbind, X), Reduce(c, beta), family)
             eta <- c / n * norm(as.matrix(beta[[k]]), "2") * sqrt(log(pk) * beta_norm0)
             lambda <- ifelse(beta[[k]], eta, 2*eta)
@@ -95,6 +95,7 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
                 support_indexes <- sample(pk, max(min(as.integer(0.2 * n), as.integer(0.5 *pk)), 1))
             }
 
+            # Calculate the support set coefficients using newton solver
             betak_support <- beta[[k]][support_indexes]
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
@@ -103,10 +104,10 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             beta[[k]] <- numeric(pk)
             beta[[k]][support_indexes] <- sub_beta
         }
+        # check if the support set stay unchanged
         if (check_stop_criteria(prev_beta, beta)) {
             break
         }
-        times_count <- times_count + 1
     }
     return(list("coefficients" = beta, "scores" = scores))
 }

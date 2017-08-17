@@ -1,14 +1,16 @@
-#' glmLasso is used to fit models with lasso penalty.
+#' Estimation function with lasso penalty
 #'
-#' @param X is a n*p input matrix.
-#' @param y is the response vector (n elements).
-#' @param o is the offset vector (n elements).
-#' @param lambda is the penalty weight vector, can also be a single value, we may apply the scalar to a vector in our function.
-#' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
-#' @param support_stability is the iterations number which the support set unchanged.
-#' @param thresh is the precision when the solver to stop optimization process. Parameter thresh and support_stability can not be set at the same time.
-#' @param max.iter is the maximum number of iterations to be performed for the optimization.
-#' @param intercept is a boolean value, which indicate whether intercept will be fitted. Default value is TRUE.
+#' @description glmLasso is used to fit models with lasso penalty.
+#'
+#' @param X is a n*p data matrix.
+#' @param y is the response vector of length n.
+#' @param o is the offset vector of length n.
+#' @param lambda is the penalty parameter, can be either a scalar or a vector. If a vector, would apply each element to do a regression.
+#' @param family is a description of the error distribution and link function to be used in the model. In our package, the character string can be "binomial", "gaussian" or "poisson".
+#' @param support_stability decides the stop criterian. When the support set stay unchanged for support_stability iterations, it assume that the function is stable enough to stop.
+#' @param thresh is the threshold of the diffrence between adjacent iteration coefficents. Parameter thresh and support_stability can not be set at the same time.
+#' @param max.iter is the maximum number of iterations to be performed for the optimization routine.
+#' @param intercept is a boolean value, which indicates whether intercept will be fitted in the function. Default value is TRUE.
 #'
 #' @return the coefficients vector
 #'
@@ -92,16 +94,18 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
     glmLassoCPP(X, y, o, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u)
 }
 
-#' glmRidge is used to fit models with ridge penalty.
+#' Estimation function with ridge penalty
 #'
-#' @param X is a n*p input matrix.
-#' @param y is the response vector (n elements).
-#' @param o is the offset vector (n elements).
-#' @param lambda is a single value of ridge penalty.
-#' @param family is a description of the error distribution and link function to be used in the model. In our package, "binomial", "gaussian" and  "poisson" are available.
-#' @param thresh indicates when to stop the solver. glmRidge will check the Euclidean norm of the change.
+#' @description glmRidge is used to fit models with ridge penalty.
+#'
+#' @param X is a n*p data matrix.
+#' @param y is the response vector of length n.
+#' @param o is the offset vector of length n.
+#' @param lambda is the penalty parameter, can be either a scalar or a vector. If a vector, would apply each element to do a regression.
+#' @param family is a description of the error distribution and link function to be used in the model. In our package, the character string can be "binomial", "gaussian" or "poisson".
+#' @param thresh is the threshold to stop the solver. The comparison would perform between it and the difference of the the adjacent iteration coefficents Euclidean norm .
 #' @param max.iter is the maximum number of iterations to be performed for the optimization.
-#' @param intercept is a boolean value, which indicate whether intercept will be fitted. Default value is TRUE.
+#' @param intercept is a boolean value, which indicate whether intercept will be fitted in the function. Default value is TRUE.
 #'
 #' @return the coefficients vector
 #'
