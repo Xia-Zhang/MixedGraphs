@@ -12,3 +12,4 @@ test
 .Rhistory
 /man/*
 RcppExports.*
+/docs/*

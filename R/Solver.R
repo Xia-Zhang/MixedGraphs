@@ -15,10 +15,12 @@
 #' @return the coefficients vector
 #'
 #' @examples
-#' X <- matrix(rnorm(500), ncol = 10)
-#' y <- rbinom(50, 1, 0.6)
-#' o <- rnorm(50)
-#' lambda <- c(1:10)/10
+#' n <- 5
+#' p <- 10
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rbinom(n, 1, 0.6)
+#' o <- rnorm(n)
+#' lambda <- c(1:5)/10
 #' glmLasso(X, y, o, lambda, family = "binomial", support_stability = 10, max.iter = 1e7, intercept = TRUE)
 #'
 #' @export
@@ -110,9 +112,11 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
 #' @return the coefficients vector
 #'
 #' @examples
-#' X <- matrix(rnorm(500), ncol = 10)
-#' y <- rbinom(50, 1, 0.6)
-#' o <- rnorm(50)
+#' n <- 50
+#' p <- 10
+#' X <- matrix(rnorm(n * p), n, p)
+#' y <- rbinom(n, 1, 0.6)
+#' o <- rnorm(n)
 #' glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5, intercept = TRUE)
 #'
 #' @export

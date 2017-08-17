@@ -3,7 +3,10 @@ Type: Package
 Title: Mixed Graphical Models
 Version: 1.0
 Date: 2017-05-30
-Author: Xia Zhang
+Authors@R: c(
+    person("Xia", "Zhang", role = c("aut", "cre"), email = "zhangxia9403@gmail.com"),
+    person("Michael", "Weylandt", role = "aut", email = "michael.weylandt@gmail.com"),
+    person("Genevera", "Allen", role = "cph", email = "gallen@rice.edu"))
 Maintainer: Xia Zhang <zhangxia9403@gmail.com>
 Description: An R package for mixed graphical models. The package allow for fitting, simulating from, and visualizing mixed graphical models.
 License: GPL-2

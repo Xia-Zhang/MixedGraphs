@@ -12,6 +12,16 @@ before_install:
   - Rscript -e "devtools::install_deps()"
   - Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite('RCy3')"
   - Rscript -e "devtools::document()"
+  - Rscript -e "devtools::install_github('hadley/pkgdown'); pkgdown::build_site()"
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master
+  local_dir: ./docs
+  target_branch: gh-pages
 
 r_build_args: --no-build-vignettes --no-manual --no-resave-data
 r_check_args: --no-build-vignettes --no-manual
