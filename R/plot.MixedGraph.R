@@ -27,13 +27,12 @@ produce_colors <- function(K) {
 #' }
 #'
 #' @examples
-#' X1 <- matrix(rnorm(12), nrow = 4)
-#' X2 <- matrix(rnorm(12), nrow = 4)
-#' X <- list(X1, X2)
-#' crf_structure <- matrix(c(1, 1, 0, 1), nrow = 2)
+#' X <- lapply(1 : 3, function(x){matrix(rnorm(12), nrow = 4)})
+#' crf_structure = matrix(c(1, 0, 1, 1, 1, 1, 0, 0, 1), 3, 3)
 #' brail_control <- list(B = 5, tau = 0.6)
 #' G <- MixedGraph(X, crf_structure, brail_control = brail_control)
 #' plot(G, method = "igraph", weighted = TRUE)
+#' plot(G, method = "cytoscape.js", out.file = "./docs/cytoscapejs.html")
 #'
 #' @importFrom graphics plot
 #' @import igraph
@@ -85,6 +84,14 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         labelnames <- as.vector(sapply(x$data, function(x) {
             colnames(x)
         }))
+    }
+
+    if (is.null(out.file) == FALSE) {
+        path <- dirname(out.file)
+        if (file.exists(path) == FALSE) {
+            dir.create(path)
+            cat("Create the dir ", path)
+        }
     }
 
     if (method == "igraph") {
@@ -233,7 +240,9 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
 
         # save file
         if(is.null(out.file) == FALSE) {
-            htmlwidgets::saveWidget(Cytoscapejs(cy), file = out.file, selfcontained = TRUE)
+            normalizePath(path)
+            name <- basename(out.file)
+            htmlwidgets::saveWidget(Cytoscapejs(cy), file = paste0(path, name), selfcontained = FALSE)
             cat(paste("Output file: ", out.file, "\n", sep=""))
         }
         else {

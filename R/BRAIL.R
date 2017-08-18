@@ -40,13 +40,11 @@ check_stop_criteria <- function(prev_beta, beta) {
 #' @return a list containing n vectors. Each element of the list will be a vector of length p_k, where p_k is the number of columns in the k-th block.
 #'
 #' @examples
-#' n <- 10
-#' p <- 50
-#' X1 <- matrix(rnorm(n * p), n, p)
-#' X2 <- matrix(rnorm(n * p), n, p)
+#' n <- 5
+#' p <- 10
+#' X <- lapply(1:2, function(x) {matrix(rnorm(n * p), n, p)})
 #' y <- rnorm(n)
-#' X <- list(X1, X2)
-#' BRAIL(X, y, family = "gaussian", tau = 0.8, B = 200, doPar = TRUE, 
+#' BRAIL(X, y, family = "gaussian", tau = 0.8, B = 20, doPar = TRUE, 
 #' lasso.control= list(support_stability = 10, max.iter = 1e6),
 #' ridge.control = list(max.iter = 1e4, thresh = 1e-5))
 #'
