@@ -90,7 +90,7 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
         path <- dirname(out.file)
         if (file.exists(path) == FALSE) {
             dir.create(path)
-            cat("Create the dir ", path)
+            cat("Create the dir ", path, "\n")
         }
     }
 
@@ -240,10 +240,10 @@ plot.MixedGraph <- function(x, method = c("igraph", "cytoscape", "cytoscape.js")
 
         # save file
         if(is.null(out.file) == FALSE) {
-            normalizePath(path)
+            path <- normalizePath(path)
             name <- basename(out.file)
-            htmlwidgets::saveWidget(Cytoscapejs(cy), file = paste0(path, name), selfcontained = FALSE)
-            cat(paste("Output file: ", out.file, "\n", sep=""))
+            htmlwidgets::saveWidget(Cytoscapejs(cy), file = file.path(path, name), selfcontained = FALSE)
+            cat(paste("Output file: ", file.path(path, name), "\n", sep=""))
         }
         else {
             Cytoscapejs(cy)
