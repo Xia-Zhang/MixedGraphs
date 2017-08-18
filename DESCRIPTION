@@ -9,7 +9,7 @@ Authors@R: c(
     person("Genevera", "Allen", role = "cph", email = "gallen@rice.edu"))
 Maintainer: Xia Zhang <zhangxia9403@gmail.com>
 Description: An R package for mixed graphical models. The package allow for fitting, simulating from, and visualizing mixed graphical models.
-License: GPL-2
+License: GPL (>= 2)
 Imports: Rcpp (>= 0.12.9), RcppParallel, foreach, igraph, graph, htmlwidgets, RCy3
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 RoxygenNote: 6.0.1

@@ -1,0 +1,13 @@
+url: https://xia-zhang.github.io/MixedGraphs
+navbar:
+  type: inverse
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Reference"
+      href: reference/index.html
+    - text: "Cytoscapejs"
+      href: cytoscapejs.html
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/Xia-Zhang/MixedGraphs
