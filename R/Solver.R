@@ -157,5 +157,8 @@ glmRidge_impl <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", 
     else if (length(beta.init) == p - 1) beta.init <- append(0, beta.init)
     family <- tolower(family)
     family <- match.arg(family)
+    if (is.numeric(thresh) == FALSE || thresh <= 0) {
+        stop("Invailid input thresh!")
+    }
     glmRidgeCPP(X, y, o, beta.init, lambda, family, thresh, max.iter, intercept)
 }
