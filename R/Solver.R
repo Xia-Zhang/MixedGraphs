@@ -21,7 +21,8 @@
 #' y <- rbinom(n, 1, 0.6)
 #' o <- rnorm(n)
 #' lambda <- c(1:5)/10
-#' glmLasso(X, y, o, lambda, family = "binomial", support_stability = 10, max.iter = 1e7, intercept = TRUE)
+#' glmLasso(X, y, o, lambda, family = "binomial", support_stability = 10, 
+#'          max.iter = 1e7, intercept = TRUE)
 #'
 #' @export
 
@@ -117,7 +118,8 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
 #' X <- matrix(rnorm(n * p), n, p)
 #' y <- rbinom(n, 1, 0.6)
 #' o <- rnorm(n)
-#' glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, max.iter = 1e5, intercept = TRUE)
+#' glmRidge(X, y, o, lambda = 0.5, family = "binomial", thresh = 0.005, 
+#'          max.iter = 1e5, intercept = TRUE)
 #'
 #' @export
 

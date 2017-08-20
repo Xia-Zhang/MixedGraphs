@@ -7,7 +7,6 @@ Authors@R: c(
     person("Xia", "Zhang", role = c("aut", "cre"), email = "zhangxia9403@gmail.com"),
     person("Michael", "Weylandt", role = "aut", email = "michael.weylandt@gmail.com"),
     person("Genevera", "Allen", role = "cph", email = "gallen@rice.edu"))
-Maintainer: Xia Zhang <zhangxia9403@gmail.com>
 Description: An R package for mixed graphical models. The package allow for fitting, simulating from, and visualizing mixed graphical models.
 License: GPL (>= 2)
 Imports: Rcpp (>= 0.12.9), RcppParallel, foreach, igraph, graph, htmlwidgets, RCy3
