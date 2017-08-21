@@ -5,7 +5,7 @@ Graphical Models for Mixed Multi Modal Data
 An R package for the mixed graphical models.
 
 ### Background
-The is the project of [GSoC 2017](https://summerofcode.withgoogle.com/projects/). 
+The is the project of [GSoC 2017](https://summerofcode.withgoogle.com/projects/).
 
 In big-data domain, the observed variables usually consist of multiple types, including binary, count-valued, continuous, categorical, bounded, etc. But traditional graphical models, always assume the data are in the same type, so they cannot apply to multi modal data directly. 
 
@@ -13,11 +13,11 @@ Recently, mentors proposed a block randomized adaptive iterative lasso ("BRAIL")
 
 ### Implementations
 Five main works of the summer
-- ADMM framework for l1-penalized Gaussian, Logistic and Poisson regression with warm start and early stopping based on support convergence in C++
+- [ADMM](http://stanford.edu/~boyd/admm.html) framework for l1-penalized Gaussian, Logistic and Poisson regression with warm start and early stopping based on support convergence in C++
 - Newton with l2-penalized Gaussian, Logistic and Poisson regression in C++
-- the BRAIL algorithm with foreach parallelization in R
-- the MixedGraph fitting routine with foreach parallelization in R
-- the plotting of MixedGraph object using igraph, Cytoscape and Cytoscape.js
+- the BRAIL algorithm with [foreach](https://CRAN.R-projet.org/package=foreach) parallelization in R
+- the MixedGraph fitting routine with [foreach](https://CRAN.R-projet.org/package=foreach) parallelization in R
+- the plotting of MixedGraph object using [igraph](http://igraph.org/r/), [Cytoscape](http://www.cytoscape.org/) and [Cytoscape.js](http://js.cytoscape.org/)
 
 ### Installation
 Install from github
@@ -25,12 +25,6 @@ Install from github
 library(devtools)
 install_github("Xia-Zhang/MixedGraphs")
 ```
-### Student
-[Xia Zhang](zhangxia9403@gmail.com)
-
-### Mentors
-[Michael Weylandt](michael.weylandt@rice.edu)
-[Genevera Allen](http://www.stat.rice.edu/~gallen)
 
 ### Usage
 - glmLasso
@@ -63,6 +57,13 @@ install_github("Xia-Zhang/MixedGraphs")
     plot(G, method = "cytoscape", layout = "")
     plot(G, method = "cytoscape.js", "attributes-layout")
     ```
+### Student
+[Xia Zhang](zhangxia9403@gmail.com)
+
+### Mentors
+[Michael Weylandt](michael.weylandt@rice.edu)
+
+[Genevera Allen](http://www.stat.rice.edu/~gallen)
 
 ### License
 GPL (>= 2)
