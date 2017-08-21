@@ -14,6 +14,7 @@ compare_diff <- function(x1, x2, thresh = 0.5) {
 test_that("Compare Newton Logistic solver with glmnet.", {
     n <- 20
     p <- 50
+    set.seed(1)
     X <- matrix(rnorm(n * p), n, p)
 
     y <- rep(c(0, 1), 10)
@@ -35,6 +36,7 @@ test_that("Compare Newton Logistic solver with glmnet.", {
 test_that("Compare Newton Logistic solver with glm.", {
     n <- 50
     p <- 10
+    set.seed(1)
     X <- matrix(rnorm(n * p), n, p)
 
     y <- rbinom(n, 1, 0.6)

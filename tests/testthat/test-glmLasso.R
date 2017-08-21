@@ -22,7 +22,8 @@ compare_diff <- function(x1, x2, thresh = 0.5) {
 
 test_that("Compare support set of glmLasso and glmnet", {
     n <- 20
-    p <- 5
+    p <- 500
+    set.seed(1)
     X <- matrix(rnorm(n * p), n, p)
 
     y <- rep(c(0, 1), 10)
@@ -44,6 +45,7 @@ test_that("Compare support set of glmLasso and glmnet", {
 test_that("Compare the glmLasso and glm", {
     n <- 200
     p <- 5
+    set.seed(1)
     X <- matrix(rnorm(n * p), n, p)
 
     y <- rbinom(n, 1, 0.6)
