@@ -6,8 +6,25 @@ navbar:
       href: index.html
     - text: "Reference"
       href: reference/index.html
+    - text: "Algorithm"
+      menu:
+        - text: ADMM with Lasso
+          href: articles/glmLasso.html
+        - text: Newton with Ridge
+          href: articles/glmRidge.html
+        - text: BRAIL
+          href: articles/BRAIL.html
+    - text: "Plotting"
+      menu:
+        - text: igraph
+          href: articles/igraph.html
+        - text: Cytoscape
+          href: articles/Cytoscape.html
+        - text: Cytoscapejs
+          href: articles/Cytoscapejs.html
+
     - text: "Cytoscapejs"
-      href: cytoscapejs.html
+      href: cytoscapejs-example.html
   right:
     - icon: fa-github fa-lg
       href: https://github.com/Xia-Zhang/MixedGraphs

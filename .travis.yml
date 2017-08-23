@@ -12,11 +12,10 @@ before_install:
   - Rscript -e "devtools::install_deps()"
   - Rscript -e "source('https://bioconductor.org/biocLite.R'); biocLite('RCy3')"
   - Rscript -e "devtools::document()"
-  - Rscript -e "devtools::install_github('hadley/pkgdown'); pkgdown::build_site()"
 
 after_success:
   - R CMD INSTALL .
-  - Rscript "./script/CreateCytojs.R"
+  - Rscript -e "devtools::install_github('hadley/pkgdown'); pkgdown::build_site()"
 
 deploy:
   provider: pages

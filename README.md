@@ -2,7 +2,7 @@ Graphical Models for Mixed Multi Modal Data
 =====
 [![Build Status](https://travis-ci.com/Xia-Zhang/MixedGraphs.svg?token=oYxg4uPnDpxizy9yT9x8&branch=master)](https://travis-ci.com/Xia-Zhang/MixedGraphs) [![License](http://img.shields.io/badge/license-GPL%20%28%3E=%202%29-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-2.0.html)
 
-An R package for the mixed graphical models.
+An R package for the mixed graphical models. You can see more detail at [homepage](http://xia-zhang.github.io/MixedGraphs).
 
 ### Background
 The is the project of [GSoC 2017](https://summerofcode.withgoogle.com/projects/).
@@ -15,8 +15,8 @@ Recently, mentors proposed a block randomized adaptive iterative lasso ("BRAIL")
 Five main works of the summer
 - [ADMM](http://stanford.edu/~boyd/admm.html) framework for l1-penalized Gaussian, Logistic and Poisson regression with warm start and early stopping based on support convergence in C++
 - Newton with l2-penalized Gaussian, Logistic and Poisson regression in C++
-- the BRAIL algorithm with [foreach](https://CRAN.R-projet.org/package=foreach) parallelization in R
-- the MixedGraph fitting routine with [foreach](https://CRAN.R-projet.org/package=foreach) parallelization in R
+- the BRAIL algorithm with [foreach](https://cran.r-project.org/web/packages/foreach) parallelization in R
+- the MixedGraph fitting routine with [foreach](https://cran.r-project.org/web/packages/foreach/) parallelization in R
 - the plotting of MixedGraph object using [igraph](http://igraph.org/r/), [Cytoscape](http://www.cytoscape.org/) and [Cytoscape.js](http://js.cytoscape.org/)
 
 ### Installation
@@ -58,12 +58,16 @@ install_github("Xia-Zhang/MixedGraphs")
     plot(G, method = "cytoscape.js", "attributes-layout")
     ```
 ### Student
-[Xia Zhang](zhangxia9403@gmail.com)
+[Xia Zhang](https://github.com/Xia-Zhang)  
+Department of Computer Science and Technology, Peking University
 
 ### Mentors
-[Michael Weylandt](michael.weylandt@rice.edu)
-
 [Genevera Allen](http://www.stat.rice.edu/~gallen)
+Departments of Statistics and ECE, Rice University  
+Jan and Dan Duncan Neurological Research Institute, Baylor College of Medicine and Texas Children’s Hospital
+
+[Michael Weylandt](https://github.com/michaelweylandt)  
+Department of Statistics, Rice University
 
 ### License
 GPL (>= 2)
