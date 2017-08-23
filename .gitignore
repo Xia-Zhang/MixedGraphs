@@ -13,3 +13,5 @@ test
 /man/*
 RcppExports.*
 /docs/*
+/vignettes/*.html
+

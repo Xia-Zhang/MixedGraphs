@@ -3,24 +3,23 @@ title: "igraph"
 output: html_document
 ---
 
-```{r include = FALSE}
-library(MixedGraphs)
-library(doParallel)
-```
- 
+
 ### Code:
 
-```{r}
-X <- lapply(1 : 3, function(x){matrix(rnorm(12), nrow = 4)})
+```{r, message = F, warning = F, results='hide'}
+library(MixedGraphs)
+X <- lapply(1 : 3, function(x) {
+    m <- matrix(rnorm(12), nrow = 4)
+    colnames(m) <- LETTERS[(3 * (x - 1) + 1) : (3 * x)]
+    m
+})
 crf_structure = matrix(c(1, 0, 1, 1, 1, 1, 0, 0, 1), 3, 3)
 brail_control <- list(B = 5, tau = 0.6)
-registerDoParallel(cores=2)
 G <- MixedGraph(X, crf_structure, brail_control = brail_control)
-graph <- plot(G, method = "igraph")
+plot(G, method = "igraph", out.file = "./images/igraph-example")
 ```
-
 
 ### Graph
 ```{r echo=FALSE}
-graph
+plot(G, method = "igraph")
 ```

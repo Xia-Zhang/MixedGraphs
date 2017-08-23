@@ -22,10 +22,6 @@ navbar:
           href: articles/Cytoscape.html
         - text: Cytoscapejs
           href: articles/Cytoscapejs.html
-
-    - text: "Cytoscapejs"
-      href: cytoscapejs-example.html
   right:
     - icon: fa-github fa-lg
       href: https://github.com/Xia-Zhang/MixedGraphs
-      

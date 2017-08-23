@@ -15,7 +15,7 @@ before_install:
 
 after_success:
   - R CMD INSTALL .
-  - Rscript -e "install.packages('doParallel')"
+  - Rscript -e "install.packages('glmnet')"
   - Rscript -e "devtools::install_github('hadley/pkgdown'); pkgdown::build_site()"
 
 deploy:
