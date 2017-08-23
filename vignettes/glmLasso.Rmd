@@ -1,0 +1,49 @@
+---
+title: "ADMM with lasso"
+output: html_document
+header-includes:
+    - \usepackage{bbm}
+    
+    
+---
+
+
+## Compare with glmnet
+```{R message = F}
+library("glmnet")
+library("MixedGraphs")
+n <- 200; p <- 500
+s <- 6; ## True sparsity
+
+X <- matrix(rnorm(n * p), ncol=p)
+beta <- rep(0, p);
+beta[1:s] <- runif(s, 4, 6) * c(-1, 1)
+y <- X %*% beta + rnorm(n)
+
+glmnet_fit <- glmnet(X ,y)
+glmLasso_fit <- glmLasso(X, y, lambda = glmnet_fit$lambda, support_stability = 20)
+```
+```{R echo = FALSE}
+plot(glmnet_fit$lambda, glmnet_fit$lambda,
+     xlim=rev(range(glmnet_fit$lambda)),
+     ylim=range(coef(glmnet_fit)),
+     type="n", xlab=expression(lambda),
+     ylab=expression(hat(beta[j]^{lambda})),
+     main="Lasso Paths")
+for(i in 1:p){
+      lines(glmnet_fit$lambda, coef(glmnet_fit)[i+1, ],
+            col=ifelse(beta[i] == 0, "grey80", "red4"))
+}
+
+plot(glmnet_fit$lambda, glmnet_fit$lambda,
+     xlim=rev(range(glmnet_fit$lambda)),
+     ylim=range(coef(glmnet_fit)),
+     type="n", xlab=expression(lambda),
+     ylab=expression(hat(beta[j]^{lambda})),
+     main="ADMM with Lasso Paths")
+for(i in 1:p){
+      lines(glmnet_fit$lambda, glmLasso_fit[i+1, ],
+            col=ifelse(beta[i] == 0, "grey80", "red4"))
+}
+
+```

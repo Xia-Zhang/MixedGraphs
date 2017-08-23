@@ -45,17 +45,17 @@ check_DAG <- function(crf_structure) {
     return(TRUE)
 }
 
-#' Mixed graph model estimate.
+#' Mixed graph model estimate
 #'
 #' @description MixedGraph is the main function of the package, it uses the BRAIL to do the regression.
 #'
 #' @param X is a list containing k matrices, each of the matrices has n rows and pk columns. They are the 'blocks'. Each block should have all columns of the same type.
 #' @param crf_structure is a K-by-K matrix giving the structure of the CRF
 #'  \itemize{
-#'  \item{element (i, j) is 1}{if element (i, j) is 1 if there are directed edges going from the i-th block to the j-th block;}
-#'  \item{element (i, j) is 0}{if there are no edges going from the i-th block to the j-th block;}
-#'  \item{element (i, i) is 1}{if there are undirected edges within the i-th block;}
-#'  \item{element (i, i) is 0}{if there are not undirected edges within the i-th block}
+#'  \item{element (i, j) is 1 }{if there are directed edges going from the i-th block to the j-th block;}
+#'  \item{element (i, j) is 0 }{if there are no edges going from the i-th block to the j-th block;}
+#'  \item{element (i, i) is 1 }{if there are undirected edges within the i-th block;}
+#'  \item{element (i, i) is 0 }{if there are not undirected edges within the i-th block}
 #' }
 #' @param family is a K vector giving the data types for each blocks. The type could be "gaussian", "binomial" or "poisson". If NULL, we can use a heuristic to guess the right value
 #' @param rule says whether to use the "AND" or "OR" rule

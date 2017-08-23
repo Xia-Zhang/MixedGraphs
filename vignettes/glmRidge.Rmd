@@ -1,0 +1,44 @@
+---
+title: "Newton with ridge"
+output: html_document
+---
+
+## Compare with glmnet
+```{R message = F}
+library("glmnet")
+library("MixedGraphs")
+n <- 200; p <- 50
+s <- 6; ## True sparsity
+
+X <- matrix(rnorm(n * p), ncol=p)
+beta <- rep(0, p);
+beta[1:s] <- runif(s, 4, 6) * c(-1, 1)
+y <- X %*% beta + rnorm(n)
+
+glmnet_fit <- glmnet(X ,y, alpha = 0)
+glmRidge_fit <- glmRidge(X, y, lambda = glmnet_fit$lambda, thresh = 1e-2)
+```
+```{R echo = FALSE}
+plot(glmnet_fit$lambda, glmnet_fit$lambda,
+     xlim=rev(range(glmnet_fit$lambda)),
+     ylim=range(coef(glmnet_fit)),
+     type="n", xlab=expression(lambda),
+     ylab=expression(hat(beta[j]^{lambda})),
+     main="Ridge Paths")
+for(i in 1:p){
+      lines(glmnet_fit$lambda, coef(glmnet_fit)[i+1, ],
+            col=ifelse(beta[i] == 0, "grey80", "red4"))
+}
+
+plot(glmnet_fit$lambda, glmnet_fit$lambda,
+     xlim=rev(range(glmnet_fit$lambda)),
+     ylim=range(coef(glmnet_fit)),
+     type="n", xlab=expression(lambda),
+     ylab=expression(hat(beta[j]^{lambda})),
+     main="Newton with ridge Paths")
+for(i in 1:p){
+      lines(glmnet_fit$lambda, glmRidge_fit[i+1, ],
+            col=ifelse(beta[i] == 0, "grey80", "red4"))
+}
+
+```
