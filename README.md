@@ -2,14 +2,15 @@ Graphical Models for Mixed Multi Modal Data
 =====
 [![Build Status](https://travis-ci.com/Xia-Zhang/MixedGraphs.svg?token=oYxg4uPnDpxizy9yT9x8&branch=master)](https://travis-ci.com/Xia-Zhang/MixedGraphs) [![License](http://img.shields.io/badge/license-GPL%20%28%3E=%202%29-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-2.0.html)
 
-An R package for the mixed graphical models. You can see more detail at [homepage](http://xia-zhang.github.io/MixedGraphs).
+The is the [project](https://summerofcode.withgoogle.com/projects/#5375151708307456) of [GSoC 2017](https://summerofcode.withgoogle.com/projects/). You can see more detail at [homepage](http://xia-zhang.github.io/MixedGraphs).
 
-### Background
-The is the project of [GSoC 2017](https://summerofcode.withgoogle.com/projects/).
+### [Background](https://github.com/rstats-gsoc/gsoc2017/wiki/Graphical-Models-for-Mixed-Multi-Modal-Data)
 
-In big-data domain, the observed variables usually consist of multiple types, including binary, count-valued, continuous, categorical, bounded, etc. But traditional graphical models, always assume the data are in the same type, so they cannot apply to multi modal data directly. 
+Graphical models provide a powerful and flexible framework for understanding complex multivariate data. These models, sometimes also referred to as network models, capture dependencies in multivariate data, allowing statisticians to discover underlying connections among measured variables. These models have been widely used in applied statistics and machine learning, with particular success in genetics, neuroscience, and finance. 
 
-Recently, mentors proposed a block randomized adaptive iterative lasso ("BRAIL") procedure to fit the mixed graphical models. In order to make the powerful new method available to a wide audience, we develop the "MixedGraphs" package.
+In big-data domain, the observed variables usually consist of multiple types, including binary, count-valued, continuous, categorical, bounded, etc. But classical graphical models, typically assume that the data are generated from a multivariate Gaussian and that each variable is marginally Gaussian. While mathematically tractable, this assumption is plainly inappropriate for mixed multi-modal data, so they cannot apply to multi modal data directly. 
+
+Recently, mentors proposed a block randomized adaptive iterative lasso ("BRAIL") procedure to fit the mixed graphical models. In this project, we propose a new package to make graphical models for mixed multi-modal data readily available to a wide audience. The proposed package will allow for fitting, simulating from, and visualizing mixed graphical models. 
 
 ### Implementations
 Five main works of the summer
@@ -18,6 +19,9 @@ Five main works of the summer
 - the BRAIL algorithm with [foreach](https://cran.r-project.org/web/packages/foreach) parallelization in R
 - the MixedGraph fitting routine with [foreach](https://cran.r-project.org/web/packages/foreach/) parallelization in R
 - the plotting of MixedGraph object using [igraph](http://igraph.org/r/), [Cytoscape](http://www.cytoscape.org/) and [Cytoscape.js](http://js.cytoscape.org/)
+
+**Note**: In package, we use [Rcpp](http://www.rcpp.org/) and [RcppArmadillo](https://cran.r-project.org/web/packages/RcppArmadillo/) to integrate R and C++ code. For the algorithm detail, you can get from [here](https://xia-zhang.github.io/MixedGraphs/articles/glmLasso.html).
+
 
 ### Installation
 Install from github
