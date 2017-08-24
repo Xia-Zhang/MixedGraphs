@@ -60,7 +60,12 @@ void ADMMPoisson::updateBeta(const arma::vec &z) {
 void ADMMGaussian::updateBeta(const arma::vec &z) {
     uint64_t n = X.n_rows, p = X.n_cols;
     if (tmpInv.empty()) {
-        tmpInv = (X.t() * X / n + arma::eye<arma::mat>(p, p)).i();
+        if (n <= 2*p) {
+            tmpInv = arma::eye<arma::mat>(p, p) - X.t() * (arma::eye<arma::mat>(n, n) * n + X * X.t()).i() * X;
+        }
+        else {
+            tmpInv = (X.t() * X / n + arma::eye<arma::mat>(p, p)).i();
+        }
         betaRidge = tmpInv * X.t() * (y - o) / n;
     }
     beta = betaRidge + tmpInv * (z - u);

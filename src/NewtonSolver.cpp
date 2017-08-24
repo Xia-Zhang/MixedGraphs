@@ -161,7 +161,13 @@ arma::vec NewtonGaussian::solve() {
     if (intercept) {
         lambdaI(0, 0) = 0;
     }
-    return (X.t() * X / n + lambdaI).i() * X.t() * (y - o) / n;
+    if (n <= 2*p && !intercept) {
+        arma::mat XX = X * X.t();
+        arma::eye<arma::mat>(p, p) - X.t() * (arma::eye<arma::mat>(n, n) * n + XX).i() * XX * (y - o) / n;
+    }
+    else {
+        return (X.t() * X / n + lambdaI).i() * X.t() * (y - o) / n;
+    }
 }
 
 // [[Rcpp::export]]
