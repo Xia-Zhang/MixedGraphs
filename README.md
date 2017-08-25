@@ -33,8 +33,9 @@ install_github("Xia-Zhang/MixedGraphs")
 ### Usage
 - glmLasso
     ```r
-    X <- matrix(rnorm(10 * 200), 10, 200)
-    y <- rbinom(10, 1, 0.6)
+    library("MixedGraphs")
+    X <- matrix(rnorm(30 * 200), 30, 200)
+    y <- rbinom(30, 1, 0.5)
     glmLasso(X, y, lambda = 0.5, family = "binomial", support_stability = 10) 
     ```
 - glmRidge

@@ -19,4 +19,4 @@ G <- MixedGraph(X, crf_structure, brail_control = brail_control)
 ```
 
 ### Graph
-![Build Status](./images/Cytoscape-example.png)
+![Run with Cytoscape software in Ubuntu](./images/Cytoscape-example.png)

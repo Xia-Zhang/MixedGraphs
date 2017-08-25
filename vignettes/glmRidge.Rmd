@@ -7,37 +7,39 @@ output: html_document
 ```{R message = F}
 library("glmnet")
 library("MixedGraphs")
-n <- 200; p <- 50
+n <- 200; p <- 500
 s <- 6; ## True sparsity
 
+set.seed(8)
 X <- matrix(rnorm(n * p), ncol=p)
 beta <- rep(0, p);
 beta[1:s] <- runif(s, 4, 6) * c(-1, 1)
 y <- X %*% beta + rnorm(n)
+y <- y / sd(y)
 
-glmnet_fit <- glmnet(X ,y, alpha = 0)
-glmRidge_fit <- glmRidge(X, y, lambda = glmnet_fit$lambda, thresh = 1e-2)
+glmnet_fit <- glmnet(X , y, alpha = 0, standardize=FALSE)
+glmRidge_fit <- glmRidge(cbind(1, X), y, lambda = glmnet_fit$lambda, thresh = 1, intercept = TRUE)
 ```
 ```{R echo = FALSE}
-plot(glmnet_fit$lambda, glmnet_fit$lambda,
-     xlim=rev(range(glmnet_fit$lambda)),
+plot(log(glmnet_fit$lambda), glmnet_fit$lambda,
+     xlim=log(rev(range(glmnet_fit$lambda))),
      ylim=range(coef(glmnet_fit)),
-     type="n", xlab=expression(lambda),
+     type="n", xlab=expression(log(lambda)),
      ylab=expression(hat(beta[j]^{lambda})),
-     main="Ridge Paths")
+     main="glmnet Paths")
 for(i in 1:p){
-      lines(glmnet_fit$lambda, coef(glmnet_fit)[i+1, ],
+      lines(log(glmnet_fit$lambda), coef(glmnet_fit)[i+1, ],
             col=ifelse(beta[i] == 0, "grey80", "red4"))
 }
 
-plot(glmnet_fit$lambda, glmnet_fit$lambda,
-     xlim=rev(range(glmnet_fit$lambda)),
+plot(log(glmnet_fit$lambda), glmnet_fit$lambda,
+     xlim=log(rev(range(glmnet_fit$lambda))),
      ylim=range(coef(glmnet_fit)),
-     type="n", xlab=expression(lambda),
+     type="n", xlab=expression(log(lambda)),
      ylab=expression(hat(beta[j]^{lambda})),
-     main="Newton with ridge Paths")
+     main="MixedGraphs Paths")
 for(i in 1:p){
-      lines(glmnet_fit$lambda, glmRidge_fit[i+1, ],
+      lines(log(glmnet_fit$lambda), glmRidge_fit[i+1, ],
             col=ifelse(beta[i] == 0, "grey80", "red4"))
 }
 
