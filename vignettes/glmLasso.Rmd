@@ -15,13 +15,13 @@ library("MixedGraphs")
 n <- 200; p <- 500
 s <- 6; ## True sparsity
 
-set.seed(8)
+set.seed(1)
 X <- matrix(rnorm(n * p), ncol=p)
 beta <- rep(0, p);
 beta[1:s] <- runif(s, 4, 6) * c(-1, 1)
 y <- X %*% beta + rnorm(n)
 
-glmnet_fit <- glmnet(X ,y)
+glmnet_fit <- glmnet(X, y, standardize = FALSE)
 glmLasso_fit <- glmLasso(X, y, lambda = glmnet_fit$lambda, support_stability = 20)
 ```
 ```{R echo = FALSE}

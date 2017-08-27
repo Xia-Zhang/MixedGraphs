@@ -28,9 +28,7 @@
 
 glmLasso <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "binomial", "poisson"),
                      support_stability = NULL, thresh = NULL, max.iter = 1e8, intercept = TRUE) {
-    names <- sapply(1:ncol(X), function(i){
-        paste("v", i, sep = "")
-    })
+    names <- colnames(X, do.NULL = FALSE, prefix = "v")
     if (intercept) names <- c("(Intercept)", names)
     if (is.atomic(lambda) && length(lambda) == 1L) {
         if (is.null(thresh) && is.null(support_stability)) thresh <- 1e-8
@@ -130,9 +128,7 @@ glmLasso_impl <- function(X, y, o = NULL, weight = NULL, lambda = NULL, family =
 
 glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", "binomial", "poisson"),
                      thresh = NULL, max.iter = 1e8, intercept = TRUE) {
-    names <- sapply(1:ncol(X), function(i){
-        paste("v", i, sep = "")
-    })
+    names <- colnames(X, do.NULL = FALSE, prefix = "v")
     if (intercept) names <- c("(Intercept)", names)
     if (is.atomic(lambda) && length(lambda) == 1L) {
         if (is.null(thresh)) thresh <- 1e-8

@@ -107,6 +107,7 @@ arma::mat ADMM::fit(const std::string family) {
                 updateUBeta(solvers);
                 updateZ();
                 if (stopCriteria()) {
+                    supportIter = 0;
                     break;
                 }
                 k++;
