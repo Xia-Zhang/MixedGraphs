@@ -5,37 +5,50 @@ using namespace RcppParallel;
 ADMM::ADMM (const arma::mat &X,
             const arma::vec &y,
             const arma::vec &o,
-            const arma::vec &lambda,
+            const arma::vec &weight,
+            const arma::vec &lambdas,
             const double thresh,
             const uint64_t support_stability,
             const uint64_t maxIter,
             const arma::vec &betaWS,
             const arma::vec &zWS,
-            const arma::vec &uWS) {
-    reset(X, y, o, lambda, thresh, support_stability, maxIter, betaWS, zWS, uWS);
+            const arma::vec &uWS,
+            const bool intercept) {
+    reset(X, y, o, weight, lambdas, thresh, support_stability, maxIter, betaWS, zWS, uWS);
 }
 
 void ADMM::reset(const arma::mat &X,
                  const arma::vec &y,
                  const arma::vec &o,
-                 const arma::vec &lambda,
+                 const arma::vec &weight,
+                 const arma::vec &lambdas,
                  const double thresh,
                  const uint64_t support_stability,
                  const uint64_t maxIter,
                  const arma::vec &betaWS,
                  const arma::vec &zWS,
-                 const arma::vec &uWS) {
+                 const arma::vec &uWS,
+                 const bool intercept) {
     uint64_t n = X.n_rows, p = X.n_cols;
     this->X = X;
     this->y = y;
     setVec(this->o, o, n);
-    setWeight(lambda);
+    if (lambdas.empty() && weight.empty()) {
+        Rcpp::stop("Please input lambda!");
+    }
+    if (!lambdas.empty()) {
+        this->lambdas = lambdas;
+    }
+    else {
+        setWeight(weight);
+    }
     this->thresh = thresh;
     this->support_stability = support_stability;
     this->maxIter = maxIter;
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
     setVec(this->uWS, uWS, p);
+    this->intercept = intercept;
     preZ = arma::vec(p, arma::fill::zeros);
 }
 
@@ -47,7 +60,8 @@ void ADMM::clear() {
     betaWS.clear();
     zWS.clear();
     uWS.clear();
-    lambda.clear();
+    weight.clear();
+    lambdas.clear();
     z.clear();
     preZ.clear();
     thresh = 0.0;
@@ -55,14 +69,15 @@ void ADMM::clear() {
     maxIter = 0;
 }
 
-arma::vec ADMM::fit(const std::string family) {
+arma::mat ADMM::fit(const std::string family) {
     uint64_t k = 1, p = X.n_cols;
     // TODO: consensus ADMM partition number
     uint64_t partitions = 1;
     std::vector<ADMMSolver *> solvers(partitions);
     std::string lowerMethod(family);
     sumUBeta = arma::mat(p, partitions, arma::fill::zeros);
-    
+    arma::mat result;
+
     std::transform(lowerMethod.begin(), lowerMethod.end(), lowerMethod.begin(), ::tolower);
     if (lowerMethod == "binomial") {
         initializeSolver<ADMMLogistic>(solvers);
@@ -75,42 +90,70 @@ arma::vec ADMM::fit(const std::string family) {
     }
     z = zWS;
 
-    while (k <= maxIter) {
-        Rcpp::checkUserInterrupt();
-        updateUBeta(solvers);
-        updateZ();
-        if (stopCriteria()) {
-            break;
+    if (lambdas.empty()) {
+        while (k <= maxIter) {
+            Rcpp::checkUserInterrupt();
+            updateUBeta(solvers);
+            updateZ();
+            if (stopCriteria()) {
+                break;
+            }
+            k++;
         }
-        k++;
+        result = arma::conv_to<arma::mat>::from(z);
+    }
+    else {
+        for (double lambda_tmp : lambdas) {
+            setWeight(lambda_tmp);
+            while (k <= maxIter) {
+                Rcpp::checkUserInterrupt();
+                updateUBeta(solvers);
+                updateZ();
+                if (stopCriteria()) {
+                    supportIter = 0;
+                    break;
+                }
+                k++;
+            }
+            if (result.empty()) {
+                result = arma::conv_to<arma::mat>::from(z);
+            }
+            else {
+                result = arma::join_rows(result, arma::conv_to<arma::mat>::from(z));
+            }
+        }
     }
     deleteSolver(solvers);
-    return z;
+    return result;
 }
 
-void ADMM::setWeight(const double lambda) {
-    this->lambda = arma::vec(X.n_cols);
-    this->lambda.fill(lambda);
-    this->lambda[0] = 0;
+void ADMM::setWeight(const double weight) {
+    this->weight = arma::vec(X.n_cols);
+    this->weight.fill(weight);
+    if (intercept) this->weight[0] = 0;
 }
 
 void ADMM::setWeight(const arma::vec &weight) {
     if (weight.empty()) {
-        this->lambda = arma::vec(X.n_cols, arma::fill::ones);
-        this->lambda[0] = 0;
+        Rcpp::stop("Can't set empty lambda!");
     }
     else if (weight.n_elem == X.n_cols){
-        this->lambda = weight;
+        this->weight = weight;
     }
     else if (weight.n_elem == X.n_cols - 1) {
-        this-> lambda = arma::vec(X.n_cols, arma::fill::zeros);
+        if (intercept) {
+            this->weight = arma::vec(X.n_cols, arma::fill::zeros);
+        }
+        else {
+            this->weight = arma::vec(X.n_cols, arma::fill::ones);
+        }
         for (uint64_t i = 0; i < weight.n_elem; i++) {
-            this->lambda[i + 1] = weight[i];
+            this->weight[i + 1] = weight[i];
         }
     }
 }
 
-void ADMM::setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &lambda) {
+void ADMM::setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &weight) {
     uint64_t p = X.n_cols;
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
@@ -183,7 +226,7 @@ void ADMM::updateZ() {
 }
 
 arma::vec ADMM::softThreashold(const arma::vec &x) {
-    return sign(x) % arma::max(abs(x) - lambda, arma::vec(x.n_elem, arma::fill::zeros));
+    return sign(x) % arma::max(abs(x) - weight, arma::vec(x.n_elem, arma::fill::zeros));
 }
 
 bool ADMM::stopCriteria() {
@@ -218,17 +261,19 @@ void ADMM::setVec(arma::vec &target, const arma::vec &source, const uint64_t num
 }
 
 // [[Rcpp::export]]
-Rcpp::NumericVector glmLassoCPP (const arma::mat& X, 
-                        const arma::vec& y, 
-                        const arma::vec& o, 
-                        const arma::vec &lambda, 
-                        const std::string family, 
-                        const uint64_t support_stability, 
-                        const double thresh, 
-                        const uint64_t maxIter, 
-                        const arma::vec& betaWS,
-                        const arma::vec &zWS,
-                        const arma::vec &uWS) {
-    ADMM admm(X, y, o, lambda, thresh, support_stability, maxIter, betaWS, zWS, uWS);
+Rcpp::NumericMatrix glmLassoCPP (const arma::mat &X, 
+                                 const arma::vec &y, 
+                                 const arma::vec &o, 
+                                 const arma::vec &weight, 
+                                 const arma::vec &lambdas,
+                                 const std::string family, 
+                                 const uint64_t support_stability, 
+                                 const double thresh, 
+                                 const uint64_t maxIter, 
+                                 const arma::vec& betaWS,
+                                 const arma::vec &zWS,
+                                 const arma::vec &uWS,
+                                 const bool intercept) {
+    ADMM admm(X, y, o, weight, lambdas, thresh, support_stability, maxIter, betaWS, zWS, uWS, intercept);
     return Rcpp::wrap(admm.fit(family));
 }

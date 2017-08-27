@@ -15,4 +15,4 @@ RcppExports.*
 /docs/*
 /vignettes/
 !/vignettes/*.Rmd
-
+!/vignettes/images
