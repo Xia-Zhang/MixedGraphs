@@ -97,7 +97,7 @@ glmLasso_impl <- function(X, y, o = NULL, weight = NULL, lambda = NULL, family =
     if (is.null(init.u)) init.u <- rep(0, p)
     else if (length(init.u) == p - 1) init.u <- append(0, init.u)
 
-    glmLassoCPP(X, y, o, weight, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u)
+    glmLassoCPP(X, y, o, weight, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u, intercept)
 }
 
 #' Estimation function with ridge penalty

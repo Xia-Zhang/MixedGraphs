@@ -22,7 +22,7 @@ beta[1:s] <- runif(s, 4, 6) * c(-1, 1)
 y <- X %*% beta + rnorm(n)
 
 glmnet_fit <- glmnet(X, y, standardize = FALSE)
-glmLasso_fit <- glmLasso(X, y, lambda = glmnet_fit$lambda, support_stability = 20)
+glmLasso_fit <- glmLasso(X, y, lambda = glmnet_fit$lambda, support_stability = 10)
 ```
 ```{R echo = FALSE}
 plot(glmnet_fit$lambda, glmnet_fit$lambda,

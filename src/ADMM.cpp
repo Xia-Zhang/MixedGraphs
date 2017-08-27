@@ -12,7 +12,8 @@ ADMM::ADMM (const arma::mat &X,
             const uint64_t maxIter,
             const arma::vec &betaWS,
             const arma::vec &zWS,
-            const arma::vec &uWS) {
+            const arma::vec &uWS,
+            const bool intercept) {
     reset(X, y, o, weight, lambdas, thresh, support_stability, maxIter, betaWS, zWS, uWS);
 }
 
@@ -26,7 +27,8 @@ void ADMM::reset(const arma::mat &X,
                  const uint64_t maxIter,
                  const arma::vec &betaWS,
                  const arma::vec &zWS,
-                 const arma::vec &uWS) {
+                 const arma::vec &uWS,
+                 const bool intercept) {
     uint64_t n = X.n_rows, p = X.n_cols;
     this->X = X;
     this->y = y;
@@ -46,6 +48,7 @@ void ADMM::reset(const arma::mat &X,
     setVec(this->betaWS, betaWS, p);
     setVec(this->zWS, zWS, p);
     setVec(this->uWS, uWS, p);
+    this->intercept = intercept;
     preZ = arma::vec(p, arma::fill::zeros);
 }
 
@@ -127,7 +130,7 @@ arma::mat ADMM::fit(const std::string family) {
 void ADMM::setWeight(const double weight) {
     this->weight = arma::vec(X.n_cols);
     this->weight.fill(weight);
-    this->weight[0] = 0;
+    if (intercept) this->weight[0] = 0;
 }
 
 void ADMM::setWeight(const arma::vec &weight) {
@@ -138,7 +141,12 @@ void ADMM::setWeight(const arma::vec &weight) {
         this->weight = weight;
     }
     else if (weight.n_elem == X.n_cols - 1) {
-        this->weight = arma::vec(X.n_cols, arma::fill::zeros);
+        if (intercept) {
+            this->weight = arma::vec(X.n_cols, arma::fill::zeros);
+        }
+        else {
+            this->weight = arma::vec(X.n_cols, arma::fill::ones);
+        }
         for (uint64_t i = 0; i < weight.n_elem; i++) {
             this->weight[i + 1] = weight[i];
         }
@@ -264,7 +272,8 @@ Rcpp::NumericMatrix glmLassoCPP (const arma::mat &X,
                                  const uint64_t maxIter, 
                                  const arma::vec& betaWS,
                                  const arma::vec &zWS,
-                                 const arma::vec &uWS) {
-    ADMM admm(X, y, o, weight, lambdas, thresh, support_stability, maxIter, betaWS, zWS, uWS);
+                                 const arma::vec &uWS,
+                                 const bool intercept) {
+    ADMM admm(X, y, o, weight, lambdas, thresh, support_stability, maxIter, betaWS, zWS, uWS, intercept);
     return Rcpp::wrap(admm.fit(family));
 }

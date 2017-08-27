@@ -25,6 +25,7 @@ private:
     uint64_t supportIter;
     uint64_t support_stability;
     uint64_t maxIter;
+    bool intercept;
 
     template <typename T>
     void initializeSolver(std::vector<ADMMSolver *> &solvers, const uint64_t partitions = 1);
@@ -46,7 +47,8 @@ public:
          const uint64_t maxIter = 1e8,
          const arma::vec &betaWS = arma::vec(),
          const arma::vec &zWS = arma::vec(),
-         const arma::vec &uWS = arma::vec());
+         const arma::vec &uWS = arma::vec(),
+         const bool intercept = TRUE);
     void reset(const arma::mat &X, 
                const arma::vec &y, 
                const arma::vec &o = arma::vec(),
@@ -57,7 +59,8 @@ public:
                const uint64_t maxIter = 1e8,
                const arma::vec &betaWS = arma::vec(),
                const arma::vec &zWS = arma::vec(),
-               const arma::vec &uWS = arma::vec());
+               const arma::vec &uWS = arma::vec(),
+               const bool intercept = TRUE);
     void clear();
     arma::mat fit(const std::string method);
     void setWeight(const double weight);
@@ -81,6 +84,7 @@ Rcpp::NumericMatrix glmLassoCPP (const arma::mat &X,
                                  const uint64_t maxIter = 1e8,
                                  const arma::vec &betaWS = arma::vec(),
                                  const arma::vec &zWS = arma::vec(),
-                                 const arma::vec &uWS = arma::vec());
+                                 const arma::vec &uWS = arma::vec(),
+                                 const bool intercept = TRUE);
 
 #endif
