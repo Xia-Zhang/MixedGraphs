@@ -85,9 +85,9 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
                     multi_tmp <- mapply(function(x, y) {x %*% y}, sample_X, beta)
                     o <- rowSums(as.matrix(multi_tmp[, -k]))
                     w <- lambda * runif(pk, 0.5, 1.5)
-                    lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, lambda = w, 
+                    lasso_argv <- list(X = sample_X[[k]], y = sample_y, o = o, family = family, weight = w, 
                                        init.beta = prev_beta[[k]], init.z = prev_beta[[k]], init.u = sign(prev_beta[[k]]) * lambda)
-                    do.call(glmLasso_impl, c(lasso_argv, lasso.control))[-1]
+                    as.vector(do.call(glmLasso_impl, c(lasso_argv, lasso.control)))[-1]
                 }
             scores[[k]] <- rowSums(abs(sign(betak_samples)))/B
             support_indexes <- which(scores[[k]] >= tau)

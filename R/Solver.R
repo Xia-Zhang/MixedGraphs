@@ -34,24 +34,20 @@ glmLasso <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "binomia
     if (intercept) names <- c("(Intercept)", names)
     if (is.atomic(lambda) && length(lambda) == 1L) {
         if (is.null(thresh) && is.null(support_stability)) thresh <- 1e-8
-        coefficients = glmLasso_impl(X, y, o, lambda, family, support_stability, thresh, max.iter, intercept)
+        coefficients = glmLasso_impl(X, y, o, weight = lambda, NULL, family, support_stability, thresh, max.iter, intercept)
         rownames(coefficients) <- names
         list("Coef" = coefficients)
     }
     else {
         pre_coef <- NULL
-        result <- sapply(lambda, function(lambda_tmp) {
-            coef <- glmLasso_impl(X, y, o, lambda_tmp, family, support_stability, thresh, max.iter, intercept, pre_coef, pre_coef)
-            pre_coef <<- coef
-            coef
-        })
+        result <- glmLasso_impl(X, y, o, NULL, lambda, family, support_stability, thresh, max.iter, intercept, pre_coef, pre_coef)
         colnames(result) <- lambda
         rownames(result) <- names
         result
     }
 }
 
-glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "binomial", "poisson"), support_stability = NULL,
+glmLasso_impl <- function(X, y, o = NULL, weight = NULL, lambda = NULL, family = c("gaussian", "binomial", "poisson"), support_stability = NULL,
                           thresh = NULL, max.iter = 1e8, intercept = TRUE, init.beta = NULL, init.z = NULL, init.u = NULL) {
     if (intercept) {
         X <- cbind(1, X)
@@ -60,12 +56,21 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
     p <- ncol(X)
 
     if (is.null(o)) o <- rep(0, n)
-    if (intercept) {
-        lambda <- append(0, lambda)
-        lambda <- append(lambda, rep(lambda[2], p - length(lambda)))
+    if (is.null(lambda) && is.null(weight)) {
+        stop("At least one of weight and lambda should be exist!")
+    }
+    if (is.null(lambda)) {
+        if (intercept) {
+            weight <- append(0, weight)
+            weight <- append(weight, rep(weight[2], p - length(weight)))
+        }
+        else {
+            weight <- rep(weight, p)
+        }
+        lambda <- numeric()
     }
     else {
-        lambda <- rep(lambda, p)
+        weight <- numeric()
     }
     family <- tolower(family)
     family <- match.arg(family)
@@ -94,7 +99,7 @@ glmLasso_impl <- function(X, y, o = NULL, lambda = 1, family = c("gaussian", "bi
     if (is.null(init.u)) init.u <- rep(0, p)
     else if (length(init.u) == p - 1) init.u <- append(0, init.u)
 
-    glmLassoCPP(X, y, o, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u)
+    glmLassoCPP(X, y, o, weight, lambda, family, support_stability, thresh, max.iter, init.beta, init.z, init.u)
 }
 
 #' Estimation function with ridge penalty

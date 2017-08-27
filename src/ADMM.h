@@ -17,7 +17,8 @@ private:
     arma::vec betaWS;
     arma::vec zWS;
     arma::vec uWS;
-    arma::vec lambda;
+    arma::vec weight;
+    arma::vec lambdas;
     arma::vec z;
     arma::vec preZ;
     double thresh;
@@ -38,7 +39,8 @@ public:
     ADMM(const arma::mat &X,
          const arma::vec &y,
          const arma::vec &o = arma::vec(),
-         const arma::vec &lambda = arma::vec(),
+         const arma::vec &weight = arma::vec(),
+         const arma::vec &lambdas = arma::vec(),
          const double thresh = 0.0,
          const uint64_t support_stability = 0,
          const uint64_t maxIter = 1e8,
@@ -48,7 +50,8 @@ public:
     void reset(const arma::mat &X, 
                const arma::vec &y, 
                const arma::vec &o = arma::vec(),
-               const arma::vec &lambda = arma::vec(),
+               const arma::vec &weight = arma::vec(),
+               const arma::vec &lambdas = arma::vec(),
                const double thresh = 0.0,
                const uint64_t support_stability = 0,
                const uint64_t maxIter = 1e8,
@@ -56,10 +59,10 @@ public:
                const arma::vec &zWS = arma::vec(),
                const arma::vec &uWS = arma::vec());
     void clear();
-    arma::vec fit(const std::string method);
-    void setWeight(const double lambda);
+    arma::mat fit(const std::string method);
+    void setWeight(const double weight);
     void setWeight(const arma::vec &weight = arma::vec());
-    void setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &lambda);
+    void setWarmStartPara(const arma::vec &zWS, const arma::vec &uWS, const arma::vec &weight);
     void setInitialBeta(const arma::vec &beta);
     void setThresh(double thresh);
     void setSupportStability(uint64_t support_stability);
@@ -67,16 +70,17 @@ public:
     ~ADMM(){};
 };
 
-Rcpp::NumericVector glmLassoCPP (const arma::mat &X, 
-                        const arma::vec &y, 
-                        const arma::vec &o, 
-                        const arma::vec &lambda, 
-                        const std::string family, 
-                        const uint64_t support_stability, 
-                        const double thresh, 
-                        const uint64_t maxIter, 
-                        const arma::vec &betaWS,
-                        const arma::vec &zWS,
-                        const arma::vec &uWS);
+Rcpp::NumericMatrix glmLassoCPP (const arma::mat &X,
+                                 const arma::vec &y,
+                                 const arma::vec &o = arma::vec(),
+                                 const arma::vec &weight = arma::vec(),
+                                 const arma::vec &lambdas = arma::vec(),
+                                 const std::string family = "gaussian",
+                                 const uint64_t support_stability = 0,
+                                 const double thresh = 0.0,
+                                 const uint64_t maxIter = 1e8,
+                                 const arma::vec &betaWS = arma::vec(),
+                                 const arma::vec &zWS = arma::vec(),
+                                 const arma::vec &uWS = arma::vec());
 
 #endif

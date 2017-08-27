@@ -13,5 +13,8 @@ test
 /man/*
 RcppExports.*
 /docs/*
-/vignettes/*.html
+/vignettes/
+!/vignettes/*.Rmd
+!/vignettes/images
+
 
