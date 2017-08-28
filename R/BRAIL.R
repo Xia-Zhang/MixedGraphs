@@ -100,7 +100,7 @@ BRAIL <- function(X, y, family = c("gaussian", "binomial", "poisson"), tau = 0.8
             multi_tmp <-mapply(function(x, y) {x %*% y}, X, beta)
             o <- rowSums(as.matrix(multi_tmp[, -k]))
             ridge_argv <- list(X = X[[k]][,support_indexes], y = y, o = o, beta.init = prev_beta[[k]][support_indexes], family = family, lambda = 1e-4)
-            sub_beta <- do.call(glmRidge_impl, c(ridge_argv, ridge.control))[-1]
+            sub_beta <- as.vector(do.call(glmRidge_impl, c(ridge_argv, ridge.control)))[-1]
             beta[[k]] <- numeric(pk)
             beta[[k]][support_indexes] <- sub_beta
         }

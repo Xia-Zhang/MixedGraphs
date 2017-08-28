@@ -67,6 +67,7 @@ test_that("Compare the glmLasso and glm", {
 test_that("Test glmLasso parameter checking", {
     n <- 5
     p <- 20
+    set.seed(1)
     X <- matrix(rnorm(n * p), n, p)
     y <- rnorm(n)
 
@@ -80,6 +81,7 @@ test_that("Test glmLasso parameter checking", {
 test_that("Test glmLasso with multiple lambdas input", {
     n <- 5
     p <- 20
+    set.seed(1)
     X <- matrix(rnorm(n * p), n, p)
     y <- rnorm(n)
 

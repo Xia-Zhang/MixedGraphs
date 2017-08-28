@@ -139,11 +139,7 @@ glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", "bino
     else {
         pre_coef <- NULL
         if (is.null(thresh)) thresh <- 1e-1
-        result <- sapply(lambda, function(lambda_tmp) {
-            coef <- glmRidge_impl(X, y, o, lambda_tmp, family, thresh, max.iter, intercept, pre_coef)
-            pre_coef <<- coef
-            coef
-        })
+        result <- glmRidge_impl(X, y, o, lambda, family, thresh, max.iter, intercept, pre_coef)
         colnames(result) <- lambda
         rownames(result) <- names
         result
@@ -152,16 +148,27 @@ glmRidge <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", "bino
 
 glmRidge_impl <- function(X, y, o = NULL, lambda = 0.25, family = c("gaussian", "binomial", "poisson"),
                           thresh = 1e-8, max.iter = 1e8, intercept = TRUE, beta.init = NULL) {
-    if (intercept) X <- cbind(1, X)
+    intercept_mean <- 0
+    family <- tolower(family)
+    family <- match.arg(family)
+    if (intercept) {
+        X <- cbind(1, X)
+        if (family == "gaussian") {
+            intercept_mean <- mean(y)
+            y <- y -  mean(y)
+        }
+    }
     n <- nrow(X)
     p <- ncol(X)
     if (is.null(o)) o <- rep(0, n)
     if (is.null(beta.init)) beta.init <- rep(0, p)
     else if (length(beta.init) == p - 1) beta.init <- append(0, beta.init)
-    family <- tolower(family)
-    family <- match.arg(family)
     if (is.numeric(thresh) == FALSE || thresh <= 0) {
         stop("Invailid input thresh!")
     }
-    glmRidgeCPP(X, y, o, beta.init, lambda, family, thresh, max.iter, intercept)
+    result <- glmRidgeCPP(X, y, o, beta.init, as.vector(lambda), family, thresh, max.iter, intercept)
+    if (intercept && family == "gaussian") {
+        result[1, ] <- result[1, ] + intercept_mean
+    }
+    result
 }
