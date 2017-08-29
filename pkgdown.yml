@@ -1,0 +1,11 @@
+urls:
+  reference: https://xia-zhang.github.io/MixedGraphs/reference
+  article: https://xia-zhang.github.io/MixedGraphs/articles
+articles:
+  BRAIL: BRAIL.html
+  Cytoscape: Cytoscape.html
+  Cytoscapejs: Cytoscapejs.html
+  glmLasso: glmLasso.html
+  glmRidge: glmRidge.html
+  igraph: igraph.html
+
