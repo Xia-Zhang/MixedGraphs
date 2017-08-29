@@ -2,7 +2,9 @@ Graphical Models for Mixed Multi Modal Data
 =====
 [![Build Status](https://travis-ci.com/Xia-Zhang/MixedGraphs.svg?token=oYxg4uPnDpxizy9yT9x8&branch=master)](https://travis-ci.com/Xia-Zhang/MixedGraphs) [![License](http://img.shields.io/badge/license-GPL%20%28%3E=%202%29-brightgreen.svg?style=flat)](http://www.gnu.org/licenses/gpl-2.0.html)
 
-The is the [project](https://summerofcode.withgoogle.com/projects/#5375151708307456) of [GSoC 2017](https://summerofcode.withgoogle.com/projects/). You can see more detail at [homepage](http://xia-zhang.github.io/MixedGraphs).
+The is the [project](https://summerofcode.withgoogle.com/projects/#5375151708307456) of [GSoC 2017](https://summerofcode.withgoogle.com/projects/). 
+
+You can find more detail at [homepage](http://xia-zhang.github.io/MixedGraphs) and [source code](https://github.com/Xia-Zhang/MixedGraphs).
 
 ### [Background](https://github.com/rstats-gsoc/gsoc2017/wiki/Graphical-Models-for-Mixed-Multi-Modal-Data)
 

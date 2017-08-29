@@ -1,0 +1,68 @@
+---
+title: "BRAIL"
+header-includes:
+   - \usepackage{algorithm}
+   - \usepackage{bm}
+   - \usepackage{bbm}
+output: html_document
+---
+
+BRAIL (Block Randomized Adaptive Iterative Lasso) is the key algorithm in MixedGraphs package. 
+
+### Algorithm
+Repeat through the blocks. For each block of the data, BRAIL will apply the adaptive lasso method to many bootstrap samples of the data. The levels of adaptive regularization is defined as,
+\begin{align*}
+\lambda_{k,j}^{(t)} = \begin{cases} \eta^{(t)}_k   & \text{if } \hat{\beta}^{(t-1)}_{k,j} \neq 0, \\ 
+                                                       2\eta^{(t)}_k & \text{otherwise} \end{cases}
+\end{align*}
+where 
+\begin{equation*} 
+\eta^{(t)}_k=\frac{\Lambda_{\max}(\widehat{\mathbf{\Theta}}^{(t-1)}_k)}{\Lambda_{\max}(\mathbf{X}^T\mathbf{X})} \  \frac{1}{\sqrt{n} } \|\hat{\mathbf{\beta}}^{(t-1)}_{k}\|_{2} \sqrt{\frac{\log( p_{k})}{n}\hspace{3pt} \|\hat{\mathbf{\beta}}^{(t-1)}_{k} \|_{0} } 
+\end{equation*}
+The weight of the adaptive lasso is $\gamma_j\lambda^{(t)}_{k,j}$, where $\gamma_j \buildrel{iid}\over\sim \mathcal{U}([0.5, 1.5])$.
+BRAIL will select out the variable which support ratio reach the user input $\tau$. The selected variables will do the Ridge regression to get the more accurate coeffients.
+
+We will end the loop until the coeffients for all blocks stop changing.
+
+
+### Parallelization
+We use foreach package to implement the parallelization of BRAIL and Mixedgraph, which supports different backend, Multicore, Cluster, Cloud based (via Redis). User can register the backend according to theis specific needs and system. Many packages are available like [doParallel](https://cran.r-project.org/web/packages/doParallel/vignettes/gettingstartedParallel.pdf), [doMC](https://cran.r-project.org/web/packages/doMC/vignettes/gettingstartedMC.pdf), [doSNOW](https://cran.r-project.org/web/packages/doSNOW/index.html), and etc. Each parallel backend has its own registration function. For example, when register doParalle, we could
+
+```{r eval=FALSE}
+library(doParallel)
+registerDoParallel(cores=2)
+```
+and for doMC,
+```{r eval = FALSE}
+library(doMC)
+registerDoMC(2)
+```
+
+for doSNOW, 
+```{r eval = FALSE}
+library(doSNOW)
+cl <- makeCluster(2, type="SOCK")
+registerDoSNOW(cl)
+```
+### Code example:
+```{R message = F}
+library("MixedGraphs")
+n <- 100
+p <- 50
+k <- 2
+set.seed(2)
+beta <- numeric(p * k)
+beta[1:8] <- 5
+beta[51:53] <- 3
+X <- lapply(1 : k, function(x) {
+    matrix(rnorm(n * p), n, p)
+})
+y <- do.call(cbind, X) %*% beta + rnorm(n)
+brail_test <- BRAIL(X, y, family = "G")
+```
+```{R echo = F}
+print("Truly coefficients: ")
+print(beta)
+print("BRAIL coefficients: ")
+print(brail_test)
+```
